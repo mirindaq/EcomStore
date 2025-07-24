@@ -43,8 +43,8 @@ public class Product extends BaseEntity {
     @Column
     private String slug;
 
-    @OneToMany( mappedBy = "product")
-    private List<Comment> comments;
+    @OneToMany( mappedBy = "product", fetch = FetchType.LAZY)
+    private List<Feedback> feedbacks;
 
     @ManyToOne
     @JoinColumn(name = "brand_id")

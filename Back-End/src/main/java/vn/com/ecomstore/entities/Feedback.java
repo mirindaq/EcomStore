@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "comments")
+@Table(name = "feedbacks")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Comment {
+public class Feedback {
 
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
