@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import vn.com.ecomstore.exceptions.custom.ConflictException;
 import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
-import vn.com.ecomstore.model.response.ResponseError;
+import vn.com.ecomstore.dtos.response.ResponseError;
 
 import javax.naming.AuthenticationException;
 import java.nio.file.AccessDeniedException;

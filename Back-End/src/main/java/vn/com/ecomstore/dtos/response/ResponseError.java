@@ -1,4 +1,4 @@
-package vn.com.ecomstore.model.response;
+package vn.com.ecomstore.dtos.response;
 
 import lombok.Builder;
 import lombok.Getter;

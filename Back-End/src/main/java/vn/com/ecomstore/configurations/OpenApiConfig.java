@@ -1,4 +1,4 @@
-package vn.com.ecomstore.config;
+package vn.com.ecomstore.configurations;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
