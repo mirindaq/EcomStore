@@ -2,6 +2,7 @@ package vn.com.ecomstore.exceptions;
 
 import org.springframework.http.HttpStatus;
 //import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import vn.com.ecomstore.exceptions.custom.ConflictException;
 import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
-import vn.com.ecomstore.dtos.response.ResponseError;
+import vn.com.ecomstore.dtos.response.base.ResponseError;
 
 import javax.naming.AuthenticationException;
 import java.nio.file.AccessDeniedException;
@@ -104,6 +105,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseError handleIllegalStateExceptionException(IllegalStateException ex, WebRequest request) {
+        return ResponseError.builder()
+                .timestamp(new Date())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .message(ex.getMessage())
+                .build();
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseError handleIllegalStateExceptionException(HttpMessageNotReadableException ex, WebRequest request) {
         return ResponseError.builder()
                 .timestamp(new Date())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

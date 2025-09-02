@@ -1,4 +1,4 @@
-package vn.com.ecomstore.dtos.response;
+package vn.com.ecomstore.dtos.response.base;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

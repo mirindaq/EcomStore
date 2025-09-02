@@ -43,6 +43,9 @@ public class Product extends BaseEntity {
     @Column
     private String slug;
 
+    @Column
+    private String spu;
+
     @OneToMany( mappedBy = "product", fetch = FetchType.LAZY)
     private List<Feedback> feedbacks;
 
