@@ -22,7 +22,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @GetMapping("/admin")
+    @GetMapping("")
     public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<CategoryResponse>>>> getCategories(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
@@ -31,6 +31,41 @@ public class CategoryController {
                 OK,
                 "Get categories success",
                 categoryService.getCategories( page, size)
+        ));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseSuccess<CategoryResponse>> getCategoryById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                OK,
+                "Get category detail success",
+                categoryService.getCategoryById( id)
+        ));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseSuccess<CategoryResponse>> updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryAddRequest request
+    ) {
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                OK,
+                "Get category detail success",
+                categoryService.updateCategory( id, request)
+        ));
+    }
+
+    @PutMapping("/change-status/{id}")
+    public ResponseEntity<ResponseSuccess<CategoryResponse>> changeStatusCategory(
+            @PathVariable Long id
+    ) {
+        categoryService.changeStatusCategory( id);
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                OK,
+                "Change status category success",
+                null
         ));
     }
 

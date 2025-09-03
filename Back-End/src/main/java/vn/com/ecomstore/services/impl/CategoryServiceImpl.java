@@ -12,14 +12,15 @@ import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.category.CategoryResponse;
 import vn.com.ecomstore.entities.Attribute;
 import vn.com.ecomstore.entities.Category;
+import vn.com.ecomstore.exceptions.custom.ConflictException;
+import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
 import vn.com.ecomstore.mappers.CategoryMapper;
 import vn.com.ecomstore.repositories.AttributeRepository;
 import vn.com.ecomstore.repositories.CategoryRepository;
 import vn.com.ecomstore.services.CategoryService;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,46 +33,16 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse createCategory(CategoryAddRequest request) {
-        if (categoryRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Category name already exists");
-        }
+        validateCategoryName(request.getName(), null);
 
-        List<AttributeAddRequest> attrsReq = Optional.ofNullable(request.getAttributes()).orElse(List.of());
-
-
-        Category category = Category.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .image(request.getImage())
-                .status(Boolean.TRUE.equals(request.getStatus()))
-                .build();
-
-
-        LinkedHashMap<String, String> dedup = new LinkedHashMap<>();
-        for (AttributeAddRequest ar : attrsReq) {
-            if (ar != null && ar.getName() != null) {
-                String key = ar.getName().trim();
-                if (!key.isEmpty()) {
-                    dedup.putIfAbsent(key.toLowerCase(), key);
-                }
-            }
-        }
-
+        Category category = new Category();
+        mapRequestToCategory(category, request);
         categoryRepository.save(category);
 
-        List<Attribute> attrs = dedup.values().stream()
-                .map(name -> Attribute.builder()
-                        .name(name)
-                        .category(category)
-                        .build())
-                .toList();
-
-
-        attributeRepository.saveAll(attrs);
-
-        category.setAttributes(attrs);
+        category.setAttributes(processAttributes(category, request.getAttributes(), Collections.emptyList()));
         return categoryMapper.toResponse(category);
     }
+
 
     @Override
     public ResponseWithPagination<List<CategoryResponse>> getCategories(int page, int size) {
@@ -82,6 +53,110 @@ public class CategoryServiceImpl implements CategoryService {
         Page<Category> categoryPage = categoryRepository.findAll(pageable);
 
         return ResponseWithPagination.fromPage(categoryPage,categoryMapper::toResponse);
+    }
+
+    @Override
+    public CategoryResponse getCategoryById(Long id) {
+        return categoryMapper.toResponse(getCategoryEntityById(id));
+    }
+
+    @Override
+    @Transactional
+    public CategoryResponse updateCategory(Long id, CategoryAddRequest request) {
+        Category category = getCategoryEntityById(id);
+
+        validateCategoryName(request.getName(), category);
+
+        mapRequestToCategory(category, request);
+
+        // Process attributes: giữ lại, xóa, thêm mới
+        category.setAttributes(processAttributes(category, request.getAttributes(), category.getAttributes()));
+
+        categoryRepository.save(category);
+
+        return categoryMapper.toResponse(category);
+    }
+
+    @Override
+    public void changeStatusCategory(Long id) {
+        Category category = getCategoryEntityById(id);
+        category.setStatus(!category.isStatus());
+        categoryRepository.save(category);
+    }
+
+    private Category getCategoryEntityById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+    }
+
+    private void validateCategoryName(String name, Category existingCategory) {
+        if (existingCategory == null && categoryRepository.existsByName(name)) {
+            throw new ConflictException("Category name already exists");
+        }
+        if (existingCategory != null && !name.equals(existingCategory.getName()) &&
+                categoryRepository.existsByName(name)) {
+            throw new ConflictException("Category name already exists");
+        }
+    }
+
+    private void mapRequestToCategory(Category category, CategoryAddRequest request) {
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        category.setImage(request.getImage());
+        category.setStatus(Boolean.TRUE.equals(request.getStatus()));
+    }
+
+    /**
+     * Xử lý attribute cho cả create và update
+     * @param category: category hiện tại
+     * @param attrsReq: request attribute từ client
+     * @param existingAttrs: danh sách attribute hiện có (trống nếu create)
+     * @return danh sách attribute đã cập nhật
+     */
+    private List<Attribute> processAttributes(Category category,
+                                              List<AttributeAddRequest> attrsReq,
+                                              List<Attribute> existingAttrs) {
+
+        List<AttributeAddRequest> requestList = Optional.ofNullable(attrsReq).orElse(List.of());
+
+        // Dedupe attribute request
+        LinkedHashMap<String, String> dedup = requestList.stream()
+                .filter(ar -> ar != null && ar.getName() != null && !ar.getName().isBlank())
+                .collect(Collectors.toMap(
+                        ar -> ar.getName().trim().toLowerCase(),
+                        ar -> ar.getName().trim(),
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+
+        // Xóa attribute cũ không còn trong request
+        List<Attribute> toRemove = existingAttrs.stream()
+                .filter(attr -> !dedup.containsKey(attr.getName().toLowerCase()))
+                .toList();
+        attributeRepository.deleteAll(toRemove);
+
+        // Lấy attribute hiện có (để không tạo trùng)
+        Set<String> existingNames = existingAttrs.stream()
+                .map(a -> a.getName().toLowerCase())
+                .collect(Collectors.toSet());
+
+        // Thêm attribute mới
+        List<Attribute> newAttrs = dedup.values().stream()
+                .filter(name -> !existingNames.contains(name.toLowerCase()))
+                .map(name -> Attribute.builder()
+                        .name(name)
+                        .category(category)
+                        .build())
+                .toList();
+        attributeRepository.saveAll(newAttrs);
+
+        // Kết hợp attribute cũ còn lại + mới
+        List<Attribute> updatedAttrs = existingAttrs.stream()
+                .filter(attr -> !toRemove.contains(attr))
+                .collect(Collectors.toList());
+        updatedAttrs.addAll(newAttrs);
+
+        return updatedAttrs;
     }
 
 }
