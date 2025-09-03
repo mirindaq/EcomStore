@@ -129,30 +129,36 @@ public class CategoryServiceImpl implements CategoryService {
                         LinkedHashMap::new
                 ));
 
-        // Xóa attribute cũ không còn trong request
-        List<Attribute> toRemove = existingAttrs.stream()
-                .filter(attr -> !dedup.containsKey(attr.getName().toLowerCase()))
-                .toList();
-        attributeRepository.deleteAll(toRemove);
+        // Cập nhật attribute cũ: nếu không còn trong request -> inactive
+        existingAttrs.forEach(attr -> {
+            if (!dedup.containsKey(attr.getName().toLowerCase())) {
+                attr.setActive(false);
+            } else {
+                attr.setActive(true);
+            }
+        });
+        attributeRepository.saveAll(existingAttrs);
 
-        // Lấy attribute hiện có (để không tạo trùng)
+        // Lấy tên attribute cũ còn active
         Set<String> existingNames = existingAttrs.stream()
+                .filter(Attribute::isActive)
                 .map(a -> a.getName().toLowerCase())
                 .collect(Collectors.toSet());
 
-        // Thêm attribute mới
+        // Thêm attribute mới nếu chưa có
         List<Attribute> newAttrs = dedup.values().stream()
                 .filter(name -> !existingNames.contains(name.toLowerCase()))
                 .map(name -> Attribute.builder()
                         .name(name)
                         .category(category)
+                        .active(true)
                         .build())
                 .toList();
         attributeRepository.saveAll(newAttrs);
 
-        // Kết hợp attribute cũ còn lại + mới
+        // Kết hợp danh sách attribute active
         List<Attribute> updatedAttrs = existingAttrs.stream()
-                .filter(attr -> !toRemove.contains(attr))
+                .filter(Attribute::isActive)
                 .collect(Collectors.toList());
         updatedAttrs.addAll(newAttrs);
 

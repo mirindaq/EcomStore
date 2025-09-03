@@ -1,9 +1,6 @@
 package vn.com.ecomstore.dtos.response.category;
 
 import lombok.*;
-import vn.com.ecomstore.entities.Attribute;
-import vn.com.ecomstore.entities.Category;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

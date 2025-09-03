@@ -21,4 +21,7 @@ public class Attribute extends BaseEntity{
 
     @ManyToOne
     private Category category;
+
+    @Column(nullable = false)
+    private boolean active = true;
 }
