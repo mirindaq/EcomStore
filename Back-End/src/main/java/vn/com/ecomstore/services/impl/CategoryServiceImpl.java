@@ -1,13 +1,18 @@
 package vn.com.ecomstore.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.com.ecomstore.dtos.request.category.AttributeAddRequest;
 import vn.com.ecomstore.dtos.request.category.CategoryAddRequest;
+import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.category.CategoryResponse;
 import vn.com.ecomstore.entities.Attribute;
 import vn.com.ecomstore.entities.Category;
+import vn.com.ecomstore.mappers.CategoryMapper;
 import vn.com.ecomstore.repositories.AttributeRepository;
 import vn.com.ecomstore.repositories.CategoryRepository;
 import vn.com.ecomstore.services.CategoryService;
@@ -22,6 +27,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final AttributeRepository attributeRepository;
+    private final CategoryMapper categoryMapper;
 
     @Override
     @Transactional
@@ -64,6 +70,18 @@ public class CategoryServiceImpl implements CategoryService {
         attributeRepository.saveAll(attrs);
 
         category.setAttributes(attrs);
-        return CategoryResponse.convertFromEntity(category);
+        return categoryMapper.toResponse(category);
     }
+
+    @Override
+    public ResponseWithPagination<List<CategoryResponse>> getCategories(int page, int size) {
+
+        page = Math.max(0, page - 1);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Category> categoryPage = categoryRepository.findAll(pageable);
+
+        return ResponseWithPagination.fromPage(categoryPage,categoryMapper::toResponse);
+    }
+
 }
