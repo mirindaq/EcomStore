@@ -38,10 +38,16 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseWithPagination<List<BrandResponse>> getBrands(int page, int size) {
+    public ResponseWithPagination<List<BrandResponse>> getBrands(int page, int size, String brandName) {
         page = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Brand> brandPage = brandRepository.findAll(pageable);
+        Page<Brand> brandPage ;
+
+        if (brandName != null && !brandName.isBlank()) {
+            brandPage = brandRepository.findByNameContainingIgnoreCase(brandName, pageable);
+        } else {
+            brandPage = brandRepository.findAll(pageable);
+        }
         return ResponseWithPagination.fromPage(brandPage, brandMapper::toResponse);
     }
 
@@ -66,7 +72,6 @@ public class BrandServiceImpl implements BrandService {
         brand.setStatus(!brand.isStatus());
         brandRepository.save(brand);
     }
-
     private Brand getBrandEntityById(Long id) {
         return brandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
