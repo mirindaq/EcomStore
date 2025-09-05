@@ -136,16 +136,17 @@ public class CategoryServiceImpl implements CategoryService {
         // Cập nhật attribute cũ: nếu không còn trong request -> inactive
         existingAttrs.forEach(attr -> {
             if (!dedup.containsKey(attr.getName().toLowerCase())) {
-                attr.setActive(false);
+                attr.setStatus(false);
             } else {
-                attr.setActive(true);
+                attr.setStatus(true);
+
             }
         });
         attributeRepository.saveAll(existingAttrs);
 
         // Lấy tên attribute cũ còn active
         Set<String> existingNames = existingAttrs.stream()
-                .filter(Attribute::isActive)
+                .filter(Attribute::isStatus)
                 .map(a -> a.getName().toLowerCase())
                 .collect(Collectors.toSet());
 
@@ -155,14 +156,14 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(name -> Attribute.builder()
                         .name(name)
                         .category(category)
-                        .active(true)
+                        .status(true)
                         .build())
                 .toList();
         attributeRepository.saveAll(newAttrs);
 
         // Kết hợp danh sách attribute active
         List<Attribute> updatedAttrs = existingAttrs.stream()
-                .filter(Attribute::isActive)
+                .filter(Attribute::isStatus)
                 .collect(Collectors.toList());
         updatedAttrs.addAll(newAttrs);
 

@@ -2,6 +2,8 @@ package vn.com.ecomstore.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import vn.com.ecomstore.enums.OrderStatus;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,7 +32,8 @@ public class Order extends BaseEntity {
     private LocalDateTime orderDate;
 
     @Column
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 
     @Column
     private String note;

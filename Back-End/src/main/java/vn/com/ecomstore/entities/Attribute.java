@@ -23,5 +23,5 @@ public class Attribute extends BaseEntity{
     private Category category;
 
     @Column(nullable = false)
-    private boolean active = true;
+    private boolean status = true;
 }

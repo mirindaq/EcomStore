@@ -1,6 +1,8 @@
 package vn.com.ecomstore.dtos.response.category;
 
 import lombok.*;
+import vn.com.ecomstore.dtos.response.attribute.AttributeResponse;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,14 +20,4 @@ public class CategoryResponse {
     private LocalDateTime modifiedAt;
     private List<AttributeResponse> attributes;
 
-    @Getter
-    @Setter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AttributeResponse {
-        private Long id;
-        private String name;
-
-    }
 }
