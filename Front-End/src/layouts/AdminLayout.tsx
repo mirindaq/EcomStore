@@ -28,7 +28,7 @@ import {
   Store,
   Award,
   Tag,
-  Truck
+  Truck,
 } from "lucide-react"
 
 const navigation = [
@@ -51,6 +51,11 @@ const navigation = [
     title: "Danh mục",
     icon: Store,
     href: "/admin/categories",
+  },
+  {
+    title: "Gán thương hiệu",
+    icon: Tag,
+    href: "/admin/category-brands",
   },
   {
     title: "Thương hiệu",

@@ -5,6 +5,7 @@ import { useRoutes } from "react-router";
 import Dashboard from "@/pages/admin/Dashboard";
 import Products from "@/pages/admin/Products";
 import Categories from "@/pages/admin/Categories";
+import CategoryBrands from "@/pages/admin/CategoryBrands";
 import Customers from "@/pages/admin/Customers";
 import Orders from "@/pages/admin/Orders";
 import Settings from "@/pages/admin/Settings";
@@ -49,6 +50,10 @@ const useRouteElements = () => {
         {
           path: ADMIN_PATH.CATEGORIES,
           element: <Categories />,
+        },
+        {
+          path: ADMIN_PATH.CATEGORY_BRANDS,
+          element: <CategoryBrands />,
         },
         {
           path: ADMIN_PATH.BRANDS,

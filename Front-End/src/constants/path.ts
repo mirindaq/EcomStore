@@ -9,6 +9,7 @@ export const ADMIN_PATH = {
   PRODUCTS: "/admin/products",
   PRODUCT_ADD: "/admin/products/add",
   CATEGORIES: "/admin/categories",
+  CATEGORY_BRANDS: "/admin/category-brands",
   BRANDS: "/admin/brands",
   EMPLOYEES: "/admin/employees",
   CUSTOMERS: "/admin/customers",
