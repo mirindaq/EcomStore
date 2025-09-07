@@ -1,21 +1,25 @@
 package vn.com.ecomstore.entities;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "users")
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity  {
+@Inheritance(strategy = InheritanceType.JOINED)
+public class User {
 
     @Id
-    @GeneratedValue( strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
@@ -24,10 +28,10 @@ public class User extends BaseEntity  {
     @Column
     private String avatar;
 
-    @Column
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "full_name")
+    @Column
     private String fullName;
 
     @Column
@@ -38,19 +42,19 @@ public class User extends BaseEntity  {
     private String phone;
 
     @Column
+    private LocalDate dateOfBirth;
+
+    @Column
     private boolean active;
 
     @Column
     private String refreshToken;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    @JsonIgnore
-    private Role role;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<UserRole> userRole;
 
     @ToString.Exclude
     @JsonIgnore
     @OneToOne(mappedBy = "user")
     private Cart cart;
-
 }

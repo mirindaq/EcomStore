@@ -2,7 +2,6 @@ package vn.com.ecomstore.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
