@@ -26,8 +26,5 @@ public class Staff extends User {
     @Enumerated(EnumType.STRING)
     private WorkStatus workStatus; // Enum: ACTIVE, INACTIVE, PROBATION
 
-    @Column(name = "employee_code", unique = true)
-    private String employeeCode;
-
 
 }

@@ -3,6 +3,8 @@ package vn.com.ecomstore.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -31,5 +33,8 @@ public class ProductVariant extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
+    @OneToMany( mappedBy = "productVariant", fetch = FetchType.LAZY)
+    private List<ProductVariantValue> productVariantValues;
 
 }

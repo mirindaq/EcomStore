@@ -46,8 +46,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(Endpoints.PUBLIC_ENDPOINT).permitAll()
-                        .anyRequest().authenticated()
+//                        .requestMatchers(Endpoints.PUBLIC_ENDPOINT).permitAll()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex

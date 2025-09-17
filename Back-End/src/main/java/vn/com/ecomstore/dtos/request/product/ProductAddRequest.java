@@ -31,6 +31,7 @@ public class ProductAddRequest {
     @NotBlank(message = "Ảnh thumbnail không được để trống")
     private String thumbnail;
 
+    @Builder.Default
     private boolean active = true;
 
     @NotBlank(message = "Slug không được để trống")

@@ -23,5 +23,6 @@ public class Attribute extends BaseEntity{
     private Category category;
 
     @Column(nullable = false)
-    private boolean status = true;
+    @Builder.Default
+    private Boolean status = true;
 }
