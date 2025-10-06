@@ -1,0 +1,34 @@
+package vn.com.ecomstore.mappers;
+
+import vn.com.ecomstore.dtos.response.cart.CartDetailResponse;
+import vn.com.ecomstore.dtos.response.cart.CartResponse;
+import vn.com.ecomstore.entities.Cart;
+import vn.com.ecomstore.entities.CartDetail;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring")
+public interface CartMapper {
+
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "cartDetails", target = "items")
+    @Mapping(source = "cartDetails", target = "totalPrice", qualifiedByName = "calculateTotalPrice")
+    CartResponse toResponse(Cart cart);
+
+    @Mapping(source = "productVariant.id", target = "productId")
+    @Mapping(source = "productVariant.product.name", target = "productName")
+    CartDetailResponse toItemResponse(CartDetail cartDetail);
+
+    @Named("calculateTotalPrice")
+    default double calculateTotalPrice(List<CartDetail> cartDetails) {
+        if (cartDetails == null) return 0;
+        return cartDetails.stream()
+                .mapToDouble(cd -> (cd.getPrice() != null ? cd.getPrice() : 0) *
+                        (cd.getQuantity() != null ? cd.getQuantity() : 0))
+                .sum();
+    }
+
+}

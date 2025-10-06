@@ -21,8 +21,7 @@ public class Cart {
     private Long id;
 
     @Column
-    private Long sum;
-
+    private Long totalItems;
 
     @ToString.Exclude
     @JsonIgnore
@@ -31,7 +30,7 @@ public class Cart {
     private User user;
 
 
-    @OneToMany(mappedBy = "cartUser",
+    @OneToMany(mappedBy = "cart",
             cascade = {CascadeType.MERGE, CascadeType.PERSIST},
             orphanRemoval = true)
     private List<CartDetail> cartDetails;
