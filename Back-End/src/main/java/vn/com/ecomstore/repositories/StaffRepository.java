@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import vn.com.ecomstore.entities.Staff;
+import vn.com.ecomstore.entities.User;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface StaffRepository extends JpaRepository<Staff, Long> {
     boolean existsByEmail(String email);
@@ -29,4 +31,5 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
             Pageable pageable
     );
 
+    Optional<Staff> findByEmail(String s);
 }

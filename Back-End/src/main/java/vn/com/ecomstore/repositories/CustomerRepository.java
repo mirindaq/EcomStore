@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.com.ecomstore.entities.Customer;
+import vn.com.ecomstore.entities.User;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
@@ -28,4 +30,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
                                    @Param("startDate") LocalDate startDate,
                                    @Param("endDate") LocalDate endDate,
                                    Pageable pageable);
+
+    Optional<Customer> findByEmail(String s);
 }

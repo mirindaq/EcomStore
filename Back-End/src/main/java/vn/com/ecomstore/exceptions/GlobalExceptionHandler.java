@@ -1,5 +1,6 @@
 package vn.com.ecomstore.exceptions;
 
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 //import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +13,7 @@ import org.springframework.web.context.request.WebRequest;
 import vn.com.ecomstore.exceptions.custom.ConflictException;
 import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
 import vn.com.ecomstore.dtos.response.base.ResponseError;
+import vn.com.ecomstore.exceptions.custom.UnauthorizedException;
 
 import javax.naming.AuthenticationException;
 import java.nio.file.AccessDeniedException;
@@ -126,7 +128,29 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseError handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
+        return ResponseError.builder()
+                .timestamp(new Date())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .message(ex.getMessage())
+                .build();
+    }
 
+    @ExceptionHandler(JwtException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseError handleJwtException(JwtException ex, WebRequest request) {
+        return ResponseError.builder()
+                .timestamp(new Date())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .message(ex.getMessage())
+                .build();
+    }
 
 
 

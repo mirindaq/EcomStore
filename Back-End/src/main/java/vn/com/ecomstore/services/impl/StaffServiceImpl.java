@@ -116,7 +116,7 @@ public class StaffServiceImpl implements StaffService {
                 .build();
 
         List<UserRole> userRoles = mapRoleIdsToUserRoles(staffAddRequest.getRoleIds(), staff);
-        staff.setUserRole(userRoles);
+        staff.setUserRoles(userRoles);
 
         return staff;
     }
@@ -133,9 +133,9 @@ public class StaffServiceImpl implements StaffService {
         // Map roles mới nếu có
         if (staffUpdateRequest.getRoleIds() != null) {
             List<UserRole> newUserRoles = mapRoleIdsToUserRoles(staffUpdateRequest.getRoleIds(), staff);
-            staff.getUserRole().clear();
+            staff.getUserRoles().clear();
 
-            staff.getUserRole().addAll(newUserRoles);
+            staff.getUserRoles().addAll(newUserRoles);
         }
     }
 
