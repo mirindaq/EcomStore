@@ -1,13 +1,12 @@
 package vn.com.ecomstore.dtos.request.product;
 
-import jakarta.validation.constraints.*;
-import lombok.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ProductAttributeRequest {
 
     @NotNull(message = "AttributeId không được null")

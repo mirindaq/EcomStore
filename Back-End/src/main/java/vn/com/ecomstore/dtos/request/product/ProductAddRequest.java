@@ -1,21 +1,21 @@
 package vn.com.ecomstore.dtos.request.product;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ProductAddRequest {
 
     @NotBlank(message = "Tên sản phẩm không được để trống")
     @Size(max = 255, message = "Tên sản phẩm tối đa 255 ký tự")
     private String name;
+
+    @NotBlank(message = "SPU không được để trống")
+    private String spu;
 
     @NotNull(message = "Số lượng không được để trống")
     @Min(value = 0, message = "Số lượng phải lớn hơn hoặc bằng 0")
@@ -31,14 +31,7 @@ public class ProductAddRequest {
     @NotBlank(message = "Ảnh thumbnail không được để trống")
     private String thumbnail;
 
-    @Builder.Default
-    private boolean active = true;
-
-    @NotBlank(message = "Slug không được để trống")
-    private String slug;
-
-    @NotBlank(message = "SPU không được để trống")
-    private String spu;
+    private boolean status = true;
 
     @NotNull(message = "Thương hiệu không được để trống")
     private Long brandId;

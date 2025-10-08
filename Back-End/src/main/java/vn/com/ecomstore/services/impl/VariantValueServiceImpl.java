@@ -136,7 +136,8 @@ public class VariantValueServiceImpl implements VariantValueService {
         variantValueRepository.save(value);
     }
 
-    private VariantValue getVariantValueEntityById(Long id) {
+    @Override
+    public VariantValue getVariantValueEntityById(Long id) {
         return variantValueRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("VariantValue not found with id: " + id));
     }

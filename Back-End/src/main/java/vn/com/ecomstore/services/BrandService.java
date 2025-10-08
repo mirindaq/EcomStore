@@ -3,6 +3,7 @@ package vn.com.ecomstore.services;
 import vn.com.ecomstore.dtos.request.brand.BrandAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.brand.BrandResponse;
+import vn.com.ecomstore.entities.Brand;
 
 import java.util.List;
 
@@ -17,4 +18,6 @@ public interface BrandService {
     BrandResponse updateBrand(Long id, BrandAddRequest request);
 
     void changeStatusBrand(Long id);
+
+    Brand getBrandEntityById(Long id);
 }

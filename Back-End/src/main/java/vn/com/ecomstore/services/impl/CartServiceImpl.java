@@ -31,21 +31,30 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse addProduct(CartAddRequest request) {
+        if (request.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than 0");
+        }
         Cart cart = findOrCreateCartForCurrentUser();
         ProductVariant productVariant = findProductVariant(request.getProductVariantId());
-
+        if (request.getQuantity() > productVariant.getStock()) {
+            throw new IllegalArgumentException("Quantity exceeds available stock");
+        }
         CartDetail cartDetail = findCartDetail(cart, productVariant);
-
         if (cartDetail != null) {
-            updateCartDetailQuantityAndPrice(cartDetail, request.getQuantity(), productVariant.getPrice());
+            long newQuantity = cartDetail.getQuantity() + request.getQuantity();
+            if (newQuantity > productVariant.getStock()) {
+                throw new IllegalArgumentException("Total quantity in cart exceeds available stock");
+            }
+            if (newQuantity <= 0) {
+                cart.getCartDetails().remove(cartDetail);
+            } else {
+                updateCartDetailQuantityAndPrice(cartDetail, request.getQuantity(), productVariant.getPrice());
+            }
         } else {
             addNewCartDetail(cart, productVariant, request.getQuantity());
         }
-
         updateCartTotalItems(cart);
-
         cartRepository.save(cart);
-
         return cartMapper.toResponse(cart);
     }
 
@@ -53,17 +62,12 @@ public class CartServiceImpl implements CartService {
     public CartResponse removeProduct(Long productVariantId) {
         Cart cart = findOrCreateCartForCurrentUser();
         ProductVariant productVariant = findProductVariant(productVariantId);
-
         CartDetail cartDetail = findCartDetail(cart, productVariant);
-
         if (cartDetail != null) {
             cart.getCartDetails().remove(cartDetail);
-            cartRepository.save(cart);
         }
-
         updateCartTotalItems(cart);
         cartRepository.save(cart);
-
         return cartMapper.toResponse(cart);
     }
 

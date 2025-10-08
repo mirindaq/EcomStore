@@ -3,6 +3,7 @@ package vn.com.ecomstore.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -64,4 +65,7 @@ public class Product extends BaseEntity {
             fetch = FetchType.LAZY,
             cascade = { CascadeType.MERGE, CascadeType.PERSIST})
     private List<ProductImage> productImages;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL ,orphanRemoval = true)
+    private List<ProductVariant> productVariants = new ArrayList<>();
 }

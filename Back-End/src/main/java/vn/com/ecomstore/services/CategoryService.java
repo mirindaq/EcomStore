@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import vn.com.ecomstore.dtos.request.category.CategoryAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.category.CategoryResponse;
+import vn.com.ecomstore.entities.Category;
 
 import java.util.List;
 
@@ -18,4 +19,6 @@ public interface CategoryService {
     CategoryResponse updateCategory(Long id, @Valid CategoryAddRequest request);
 
     void changeStatusCategory(Long id);
+
+    Category getCategoryEntityById(Long id);
 }
