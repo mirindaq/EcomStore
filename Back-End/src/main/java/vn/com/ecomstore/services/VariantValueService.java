@@ -1,6 +1,6 @@
 package vn.com.ecomstore.services;
+
 import vn.com.ecomstore.dtos.request.variant.VariantValueAddRequest;
-import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.variant.VariantValueResponse;
 import vn.com.ecomstore.entities.Variant;
 import vn.com.ecomstore.entities.VariantValue;
@@ -15,6 +15,5 @@ public interface VariantValueService {
     List<VariantValue> createValues(List<VariantValueAddRequest> variantValues, Variant variant);
 
     List<VariantValue> updateValue(List<VariantValueAddRequest> variantValues, Variant variant);
-
     VariantValue getVariantValueEntityById(Long id);
 }

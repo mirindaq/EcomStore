@@ -1,12 +1,9 @@
 package vn.com.ecomstore.mappers;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import vn.com.ecomstore.dtos.response.attribute.AttributeResponse;
 import vn.com.ecomstore.entities.Attribute;
-
-import java.util.List;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AttributeMapper {

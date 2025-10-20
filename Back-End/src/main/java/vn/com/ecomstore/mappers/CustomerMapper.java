@@ -1,11 +1,11 @@
 package vn.com.ecomstore.mappers;
 
-import org.mapstruct.Context;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import vn.com.ecomstore.dtos.request.customer.CustomerAddRequest;
 import vn.com.ecomstore.dtos.response.customer.CustomerResponse;
 import vn.com.ecomstore.entities.Customer;
+import org.mapstruct.Context;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", imports = {java.time.LocalDate.class, java.util.Collections.class})
 public interface CustomerMapper {
@@ -14,7 +14,6 @@ public interface CustomerMapper {
 
     CustomerResponse toResponse(Customer customer);
 
-    @Mapping(target = "registerDate", expression = "java(LocalDate.now())")
     @Mapping(target = "active", constant = "true")
     Customer toCustomer(CustomerAddRequest request);
 }

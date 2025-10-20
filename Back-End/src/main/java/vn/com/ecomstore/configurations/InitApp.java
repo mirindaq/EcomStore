@@ -1,10 +1,12 @@
 package vn.com.ecomstore.configurations;
 
 
+import vn.com.ecomstore.entities.Ranking;
 import vn.com.ecomstore.entities.Role;
 import vn.com.ecomstore.entities.Staff;
 import vn.com.ecomstore.entities.UserRole;
 import vn.com.ecomstore.enums.WorkStatus;
+import vn.com.ecomstore.repositories.RankingRepository;
 import vn.com.ecomstore.repositories.RoleRepository;
 import vn.com.ecomstore.repositories.StaffRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class InitApp {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RankingRepository rankingRepository;
 
 
     @Bean
@@ -81,8 +84,27 @@ public class InitApp {
                 staff.getUserRoles().add(adminRole);
 
                 staffRepository.save(staff);
+
             }
 
+            List<Ranking> rankings = List.of(
+                    Ranking.builder().name("S-NEW").description("New Membership")
+                            .minSpending(0.0).maxSpending(3000000.0).discountRate(0.0).build(),
+                    Ranking.builder().name("S-SILVER").description("Silver Membership")
+                            .minSpending(3000000.0).maxSpending(10000000.0).discountRate(2.0).build(),
+                    Ranking.builder().name("S-GOLD").description("Gold Membership")
+                            .minSpending(10000000.0).maxSpending(50000000.0).discountRate(3.0).build(),
+                    Ranking.builder().name("S-PLATINUM").description("Platinum Membership")
+                            .minSpending(50000000.0).maxSpending(100000000.0).discountRate(5.0).build(),
+                    Ranking.builder().name("S-DIAMOND").description("Diamond Membership")
+                            .minSpending(200000000.0).maxSpending(Double.MAX_VALUE).discountRate(7.0).build()
+            );
+
+            for (Ranking r : rankings) {
+                if (!rankingRepository.existsByName(r.getName())) {
+                    rankingRepository.save(r);
+                }
+            }
 
 
         };

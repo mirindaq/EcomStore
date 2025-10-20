@@ -1,14 +1,14 @@
 package vn.com.ecomstore.controllers;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import vn.com.ecomstore.dtos.request.variant.VariantAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.variant.VariantResponse;
 import vn.com.ecomstore.services.VariantService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,6 +32,15 @@ public class VariantController {
                 OK,
                 "Get variants success",
                 variantService.getVariants(page, size, variantName)
+        ));
+    }
+
+    @GetMapping("/category/{id}")
+    public ResponseEntity<ResponseSuccess<List<VariantResponse>>> getVariantsByCategory(@PathVariable Long id) {
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                OK,
+                "Get variants by category success",
+                variantService.getVariantsByCategory(id)
         ));
     }
 

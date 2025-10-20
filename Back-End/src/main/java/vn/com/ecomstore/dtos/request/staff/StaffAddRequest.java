@@ -1,6 +1,6 @@
 package vn.com.ecomstore.dtos.request.staff;
 
-import  vn.com.ecomstore.enums.WorkStatus;
+import vn.com.ecomstore.enums.WorkStatus;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,9 +12,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class StaffAddRequest {
 
     private String address;

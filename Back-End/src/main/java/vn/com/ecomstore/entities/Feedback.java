@@ -3,8 +3,6 @@ package vn.com.ecomstore.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
 @Setter
@@ -12,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Feedback {
+public class Feedback extends BaseEntity {
 
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
@@ -22,10 +20,10 @@ public class Feedback {
     private String content;
 
     @Column
-    private String rate;
+    private Double rate;
 
     @Column
-    private LocalDateTime date;
+    private Boolean status;
 
     @ManyToOne
     @JoinColumn( name = "product_id")
@@ -34,8 +32,5 @@ public class Feedback {
     @ManyToOne
     @JoinColumn( name = "user_id")
     private User user;
-
-
-
 
 }

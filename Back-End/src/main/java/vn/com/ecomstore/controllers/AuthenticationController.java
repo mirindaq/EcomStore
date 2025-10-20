@@ -1,7 +1,7 @@
 package vn.com.ecomstore.controllers;
 
 import vn.com.ecomstore.dtos.request.authentication.LoginRequest;
-import vn.com.ecomstore.dtos.request.authentication.RefreshTokenRequest;
+import vn.com.ecomstore.dtos.request.authentication.RegisterRequest;
 import vn.com.ecomstore.dtos.response.authentication.LoginResponse;
 import vn.com.ecomstore.dtos.response.authentication.RefreshTokenResponse;
 import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
@@ -42,20 +42,21 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseSuccess<LoginResponse>> register(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ResponseSuccess<Void>> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        authenticationService.register(registerRequest);
         return ResponseEntity.ok(new ResponseSuccess<>(
                 HttpStatus.OK,
                 "Login Success",
-                authenticationService.userLogin(loginRequest)
+                null
         ));
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<ResponseSuccess<RefreshTokenResponse>> refresh(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<ResponseSuccess<RefreshTokenResponse>> refresh(HttpServletRequest request) {
         return ResponseEntity.ok(new ResponseSuccess<>(
                 HttpStatus.OK,
                 "Login Success",
-                authenticationService.refreshToken(refreshTokenRequest)
+                authenticationService.refreshToken(request)
         ));
     }
 

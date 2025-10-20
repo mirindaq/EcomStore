@@ -20,8 +20,10 @@ public class VariantValue extends BaseEntity{
     private String value;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean status = true;
+
+    @Column
+    private String slug;
 
     @ManyToOne
     @JoinColumn(name = "variant_id")

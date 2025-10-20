@@ -1,6 +1,7 @@
 package vn.com.ecomstore.services.impl;
 
 import vn.com.ecomstore.dtos.request.cart.CartAddRequest;
+import vn.com.ecomstore.dtos.request.cart.CartUpdateQuantityRequest;
 import vn.com.ecomstore.dtos.response.cart.CartResponse;
 import vn.com.ecomstore.entities.Cart;
 import vn.com.ecomstore.entities.CartDetail;
@@ -31,30 +32,21 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse addProduct(CartAddRequest request) {
-        if (request.getQuantity() <= 0) {
-            throw new IllegalArgumentException("Quantity must be greater than 0");
-        }
         Cart cart = findOrCreateCartForCurrentUser();
         ProductVariant productVariant = findProductVariant(request.getProductVariantId());
-        if (request.getQuantity() > productVariant.getStock()) {
-            throw new IllegalArgumentException("Quantity exceeds available stock");
-        }
+
         CartDetail cartDetail = findCartDetail(cart, productVariant);
+
         if (cartDetail != null) {
-            long newQuantity = cartDetail.getQuantity() + request.getQuantity();
-            if (newQuantity > productVariant.getStock()) {
-                throw new IllegalArgumentException("Total quantity in cart exceeds available stock");
-            }
-            if (newQuantity <= 0) {
-                cart.getCartDetails().remove(cartDetail);
-            } else {
-                updateCartDetailQuantityAndPrice(cartDetail, request.getQuantity(), productVariant.getPrice());
-            }
+            cartDetail.setQuantity(cartDetail.getQuantity() + request.getQuantity());
         } else {
             addNewCartDetail(cart, productVariant, request.getQuantity());
         }
+
         updateCartTotalItems(cart);
+
         cartRepository.save(cart);
+
         return cartMapper.toResponse(cart);
     }
 
@@ -62,12 +54,17 @@ public class CartServiceImpl implements CartService {
     public CartResponse removeProduct(Long productVariantId) {
         Cart cart = findOrCreateCartForCurrentUser();
         ProductVariant productVariant = findProductVariant(productVariantId);
+
         CartDetail cartDetail = findCartDetail(cart, productVariant);
+
         if (cartDetail != null) {
             cart.getCartDetails().remove(cartDetail);
+            cartRepository.save(cart);
         }
+
         updateCartTotalItems(cart);
         cartRepository.save(cart);
+
         return cartMapper.toResponse(cart);
     }
 
@@ -82,6 +79,27 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
     }
 
+    @Override
+    public CartResponse updateProductQuantity(CartUpdateQuantityRequest request) {
+        Cart cart = findOrCreateCartForCurrentUser();
+        ProductVariant productVariant = findProductVariant(request.getProductVariantId());
+        CartDetail cartDetail = findCartDetail(cart, productVariant);
+
+        if (cartDetail == null) {
+            throw new ResourceNotFoundException("ProductVariant not found in cart");
+        }
+
+        cartDetail.setQuantity(request.getQuantity().longValue());
+
+        if (cartDetail.getQuantity() <= 0) {
+            cart.getCartDetails().remove(cartDetail);
+        }
+
+        updateCartTotalItems(cart);
+        cartRepository.save(cart);
+
+        return cartMapper.toResponse(cart);
+    }
     private Cart findOrCreateCartForCurrentUser() {
         User user = securityUtil.getCurrentUser();
         return cartRepository.findByUser_Id(user.getId())
@@ -105,18 +123,13 @@ public class CartServiceImpl implements CartService {
                 .orElse(null);
     }
 
-    private void updateCartDetailQuantityAndPrice(CartDetail cartDetail, int addedQuantity, double pricePerUnit) {
-        long newQuantity = cartDetail.getQuantity() + addedQuantity;
-        cartDetail.setQuantity(newQuantity);
-        cartDetail.setPrice(newQuantity * pricePerUnit);
-    }
 
     private void addNewCartDetail(Cart cart, ProductVariant productVariant, int quantity) {
         CartDetail cartDetail = CartDetail.builder()
                 .cart(cart)
                 .productVariant(productVariant)
                 .quantity((long) quantity)
-                .price(productVariant.getPrice() * quantity)
+                .price(productVariant.getPrice())
                 .build();
         cart.getCartDetails().add(cartDetail);
     }

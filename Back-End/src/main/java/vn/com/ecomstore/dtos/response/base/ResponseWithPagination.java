@@ -1,6 +1,8 @@
 package vn.com.ecomstore.dtos.response.base;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -9,8 +11,6 @@ import java.util.function.Function;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ResponseWithPagination<T> {
     private T data;
     private int page;

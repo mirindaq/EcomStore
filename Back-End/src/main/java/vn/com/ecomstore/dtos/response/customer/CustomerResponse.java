@@ -1,9 +1,11 @@
 package vn.com.ecomstore.dtos.response.customer;
 
+import vn.com.ecomstore.entities.Customer;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter

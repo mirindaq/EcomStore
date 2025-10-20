@@ -1,6 +1,7 @@
 package vn.com.ecomstore.controllers;
 
 import vn.com.ecomstore.dtos.request.cart.CartAddRequest;
+import vn.com.ecomstore.dtos.request.cart.CartUpdateQuantityRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
 import vn.com.ecomstore.dtos.response.cart.CartResponse;
 import vn.com.ecomstore.services.CartService;
@@ -56,6 +57,17 @@ public class CartController {
                 OK,
                 "Clear cart success",
                 null
+        ));
+    }
+
+    @PutMapping("/update-quantity")
+    public ResponseEntity<ResponseSuccess<CartResponse>> updateCartItemQuantity(
+            @RequestBody CartUpdateQuantityRequest request
+    ) {
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                OK,
+                "Update cart item quantity success",
+                cartService.updateProductQuantity(request)
         ));
     }
 }

@@ -1,13 +1,12 @@
 package vn.com.ecomstore.repositories;
 
+import vn.com.ecomstore.entities.Customer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.com.ecomstore.entities.Customer;
-import vn.com.ecomstore.entities.User;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -15,14 +14,18 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
-    @Query("SELECT c FROM Customer c WHERE " +
+//    @Query("SELECT c FROM Customer c WHERE " +
+//            "(:name IS NULL OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+//            "(:phone IS NULL OR c.phone LIKE CONCAT('%', :phone, '%')) AND " +
+//            "(:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
+//            "(:status IS NULL OR c.active = :status) AND "+
+//            "(:startDate IS NULL OR c.createdAt >= :startDate) AND " +
+//            "(:endDate IS NULL OR c.registerDate <= :endDate)")
+        @Query("SELECT c FROM Customer c WHERE " +
             "(:name IS NULL OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
             "(:phone IS NULL OR c.phone LIKE CONCAT('%', :phone, '%')) AND " +
             "(:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
-            "(:status IS NULL OR c.active = :status) AND "+
-            "(:startDate IS NULL OR c.registerDate >= :startDate) AND " +
-            "(:endDate IS NULL OR c.registerDate <= :endDate)")
-
+            "(:status IS NULL OR c.active = :status)")
     Page<Customer> searchCustomers(@Param("name") String name,
                                    @Param("phone") String phone,
                                    @Param("email") String email,
@@ -31,5 +34,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
                                    @Param("endDate") LocalDate endDate,
                                    Pageable pageable);
 
-    Optional<Customer> findByEmail(String s);
+    Optional<Customer> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
 }

@@ -1,15 +1,15 @@
 package vn.com.ecomstore.controllers;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import vn.com.ecomstore.dtos.request.product.ProductAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.product.ProductResponse;
 import vn.com.ecomstore.services.ProductService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,7 +21,6 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor
 @Tag(name = "Product Controller", description = "Controller for managing products")
 public class ProductController {
-
     private final ProductService productService;
 
     @PostMapping("")
@@ -63,5 +62,6 @@ public class ProductController {
                 productService.getProductBySlug(slug)
         ));
     }
+
 
 }

@@ -1,11 +1,5 @@
 package vn.com.ecomstore.services.impl;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import vn.com.ecomstore.dtos.request.category.AttributeAddRequest;
 import vn.com.ecomstore.dtos.request.category.CategoryAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
@@ -18,6 +12,13 @@ import vn.com.ecomstore.mappers.CategoryMapper;
 import vn.com.ecomstore.repositories.AttributeRepository;
 import vn.com.ecomstore.repositories.CategoryRepository;
 import vn.com.ecomstore.services.CategoryService;
+import vn.com.ecomstore.utils.StringUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -88,7 +89,6 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.save(category);
     }
 
-    @Override
     public Category getCategoryEntityById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
@@ -109,6 +109,7 @@ public class CategoryServiceImpl implements CategoryService {
         category.setDescription(request.getDescription());
         category.setImage(request.getImage());
         category.setStatus(Boolean.TRUE.equals(request.getStatus()));
+        category.setSlug(StringUtils.normalizeString(request.getName()));
     }
 
     /**

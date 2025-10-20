@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Entity
 @Getter
 @Setter
@@ -28,9 +27,6 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column
-    private String address;
 
     @Column
     private String avatar;
@@ -54,8 +50,9 @@ public class User implements UserDetails {
     @Column
     private Boolean active;
 
-    @Column
-    private String refreshToken;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefreshToken> refreshTokens;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<UserRole> userRoles = new ArrayList<>();

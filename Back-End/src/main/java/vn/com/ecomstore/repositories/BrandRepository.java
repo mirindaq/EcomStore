@@ -1,9 +1,9 @@
 package vn.com.ecomstore.repositories;
 
+import vn.com.ecomstore.entities.Brand;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import vn.com.ecomstore.entities.Brand;
 
 public interface BrandRepository extends JpaRepository<Brand, Long> {
 

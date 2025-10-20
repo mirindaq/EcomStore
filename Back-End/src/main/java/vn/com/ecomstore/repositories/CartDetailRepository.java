@@ -1,7 +1,7 @@
 package vn.com.ecomstore.repositories;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import vn.com.ecomstore.entities.CartDetail;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CartDetailRepository extends JpaRepository<CartDetail, Long> {
 }

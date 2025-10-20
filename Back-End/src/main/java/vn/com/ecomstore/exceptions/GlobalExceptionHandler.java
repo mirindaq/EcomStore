@@ -1,19 +1,17 @@
 package vn.com.ecomstore.exceptions;
 
 import io.jsonwebtoken.JwtException;
+import vn.com.ecomstore.dtos.response.base.ResponseError;
+import vn.com.ecomstore.exceptions.custom.ConflictException;
+import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
+import vn.com.ecomstore.exceptions.custom.UnauthorizedException;
 import org.springframework.http.HttpStatus;
-//import org.springframework.security.access.AccessDeniedException;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-import vn.com.ecomstore.exceptions.custom.ConflictException;
-import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
-import vn.com.ecomstore.dtos.response.base.ResponseError;
-import vn.com.ecomstore.exceptions.custom.UnauthorizedException;
 
 import javax.naming.AuthenticationException;
 import java.nio.file.AccessDeniedException;
@@ -116,9 +114,10 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
+
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseError handleIllegalStateExceptionException(HttpMessageNotReadableException ex, WebRequest request) {
+    public ResponseError handleException(Exception ex, WebRequest request) {
         return ResponseError.builder()
                 .timestamp(new Date())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -151,6 +150,18 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .build();
     }
+//
+//    @ExceptionHandler(AccessDeniedException.class)
+//    @ResponseStatus(HttpStatus.FORBIDDEN)
+//    public ResponseError handleJwtException(AccessDeniedException ex, WebRequest request) {
+//        return ResponseError.builder()
+//                .timestamp(new Date())
+//                .status(HttpStatus.FORBIDDEN.value())
+//                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+//                .path(request.getDescription(false).replace("uri=", ""))
+//                .message(ex.getMessage())
+//                .build();
+//    }
 
 
 

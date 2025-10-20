@@ -18,6 +18,5 @@ public interface BrandService {
     BrandResponse updateBrand(Long id, BrandAddRequest request);
 
     void changeStatusBrand(Long id);
-
     Brand getBrandEntityById(Long id);
 }

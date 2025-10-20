@@ -4,16 +4,18 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import vn.com.ecomstore.entities.User;
+import vn.com.ecomstore.enums.TokenType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import vn.com.ecomstore.entities.User;
-import vn.com.ecomstore.enums.TokenType;
 
 import java.security.InvalidParameterException;
 import java.security.Key;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,4 +94,18 @@ public class JwtUtil {
             default -> throw new InvalidParameterException("Invalid token type");
         }
     }
+
+    public LocalDate getExpirationDateFromToken(String token, TokenType type) {
+        Date expirationDate = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey(type))
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+
+        return expirationDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
 }

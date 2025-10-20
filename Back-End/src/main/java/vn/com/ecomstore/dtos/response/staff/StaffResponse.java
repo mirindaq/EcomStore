@@ -1,7 +1,7 @@
 package vn.com.ecomstore.dtos.response.staff;
 
-import  vn.com.ecomstore.entities.UserRole;
-import  vn.com.ecomstore.enums.WorkStatus;
+import vn.com.ecomstore.entities.UserRole;
+import vn.com.ecomstore.enums.WorkStatus;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -38,8 +38,6 @@ public class StaffResponse {
     private LocalDate joinDate;
 
     private WorkStatus workStatus;
-
-    private String employeeCode;
 
     private LocalDateTime createdAt;
 

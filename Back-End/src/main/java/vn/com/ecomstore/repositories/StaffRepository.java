@@ -1,18 +1,19 @@
 package vn.com.ecomstore.repositories;
 
+import vn.com.ecomstore.entities.Staff;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import vn.com.ecomstore.entities.Staff;
-import vn.com.ecomstore.entities.User;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
 public interface StaffRepository extends JpaRepository<Staff, Long> {
     boolean existsByEmail(String email);
+
+    Page<Staff> findByFullNameContainingIgnoreCase(String fullName, Pageable pageable);
 
     @Query("SELECT s FROM Staff s " +
             "WHERE (:name IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :name, '%'))) " +
@@ -31,5 +32,5 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
             Pageable pageable
     );
 
-    Optional<Staff> findByEmail(String s);
+    Optional<Staff> findByEmail(String email);
 }

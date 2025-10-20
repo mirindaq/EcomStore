@@ -2,14 +2,15 @@ package vn.com.ecomstore.configurations.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
+import vn.com.ecomstore.constraints.Endpoints;
+import vn.com.ecomstore.dtos.response.base.ResponseError;
+import vn.com.ecomstore.enums.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,9 +20,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import vn.com.ecomstore.constraints.Endpoints;
-import vn.com.ecomstore.dtos.response.base.ResponseError;
-import vn.com.ecomstore.enums.TokenType;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -33,8 +31,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
-
-    private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -90,8 +86,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicEndpoint(String requestURI) {
-        return Arrays.stream(Endpoints.PUBLIC_ENDPOINT)
-                .anyMatch(requestURI::matches);
+        return Arrays.stream(Endpoints.PRIVATE_ENDPOINT)
+                .noneMatch(requestURI::matches);
     }
 
     private void sendErrorResponse(HttpServletResponse response, HttpServletRequest request, String message) throws IOException {

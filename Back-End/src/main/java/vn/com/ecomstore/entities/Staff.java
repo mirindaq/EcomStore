@@ -1,12 +1,12 @@
 package vn.com.ecomstore.entities;
 
+import vn.com.ecomstore.enums.WorkStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import vn.com.ecomstore.enums.WorkStatus;
 
 import java.time.LocalDate;
 
@@ -25,7 +25,11 @@ public class Staff extends User {
     @Column(name = "work_status")
     @Enumerated(EnumType.STRING)
     private WorkStatus workStatus;
+
     @Column
     private Boolean leader;
+
+    @Column
+    private String address;
 
 }

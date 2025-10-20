@@ -1,23 +1,24 @@
  package vn.com.ecomstore.services.impl;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import vn.com.ecomstore.dtos.request.variant.VariantValueAddRequest;
-import vn.com.ecomstore.dtos.response.variant.VariantValueResponse;
-import vn.com.ecomstore.entities.Variant;
-import vn.com.ecomstore.entities.VariantValue;
-import vn.com.ecomstore.exceptions.custom.ConflictException;
-import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
-import vn.com.ecomstore.mappers.VariantValueMapper;
-import vn.com.ecomstore.repositories.VariantRepository;
-import vn.com.ecomstore.repositories.VariantValueRepository;
-import vn.com.ecomstore.services.VariantValueService;
+ import vn.com.ecomstore.dtos.request.variant.VariantValueAddRequest;
+ import vn.com.ecomstore.dtos.response.variant.VariantValueResponse;
+ import vn.com.ecomstore.entities.Variant;
+ import vn.com.ecomstore.entities.VariantValue;
+ import vn.com.ecomstore.exceptions.custom.ConflictException;
+ import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
+ import vn.com.ecomstore.mappers.VariantValueMapper;
+ import vn.com.ecomstore.repositories.VariantRepository;
+ import vn.com.ecomstore.repositories.VariantValueRepository;
+ import vn.com.ecomstore.services.VariantValueService;
+ import vn.com.ecomstore.utils.StringUtils;
+ import lombok.RequiredArgsConstructor;
+ import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+ import java.util.ArrayList;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.stream.Collectors;
 
  @Service
 @RequiredArgsConstructor
@@ -50,6 +51,7 @@ public class VariantValueServiceImpl implements VariantValueService {
                      VariantValue value = new VariantValue();
                      value.setValue(req.getValue());
                      value.setVariant(variant);
+                     value.setSlug(StringUtils.normalizeString(req.getValue()));
                      return value;
                  })
                  .collect(Collectors.toList());
@@ -136,13 +138,12 @@ public class VariantValueServiceImpl implements VariantValueService {
         variantValueRepository.save(value);
     }
 
-    @Override
     public VariantValue getVariantValueEntityById(Long id) {
         return variantValueRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("VariantValue not found with id: " + id));
     }
 
-    private Variant getVariantEntityById(Long id) {
+     private Variant getVariantEntityById(Long id) {
         return variantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Variant not found with id: " + id));
     }

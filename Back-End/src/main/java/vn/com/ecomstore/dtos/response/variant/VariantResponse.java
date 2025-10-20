@@ -1,5 +1,6 @@
 package vn.com.ecomstore.dtos.response.variant;
 
+import vn.com.ecomstore.dtos.response.category.CategoryResponse;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -14,7 +15,6 @@ public class VariantResponse {
     private Long id;
     private String name;
     private boolean status;
+    private CategoryResponse category;
     private List<VariantValueResponse> variantValues;
-    private LocalDateTime createdAt;
-    private LocalDateTime modifiedAt;
 }

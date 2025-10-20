@@ -19,10 +19,12 @@ public class Attribute extends BaseEntity{
     @Column
     private String name;
 
+    @Column
+    private String slug;
+
     @ManyToOne
     private Category category;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean status = true;
 }

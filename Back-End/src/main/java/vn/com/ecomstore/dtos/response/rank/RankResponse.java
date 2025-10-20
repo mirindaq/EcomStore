@@ -1,0 +1,15 @@
+package vn.com.ecomstore.dtos.response.rank;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class RankResponse {
+    private Long id;
+    private String name;
+    private String description;
+    private Double minSpending;
+    private Double maxSpending;
+    private Double discountRate;
+}

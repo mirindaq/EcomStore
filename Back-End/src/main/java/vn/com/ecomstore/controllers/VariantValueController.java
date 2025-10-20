@@ -1,11 +1,14 @@
 package vn.com.ecomstore.controllers;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
 import vn.com.ecomstore.dtos.response.variant.VariantValueResponse;
 import vn.com.ecomstore.services.VariantValueService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 

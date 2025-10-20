@@ -1,15 +1,15 @@
 package vn.com.ecomstore.controllers;
 
-import  vn.com.ecomstore.dtos.request.customer.CustomerAddRequest;
-import  vn.com.ecomstore.dtos.request.customer.CustomerProfileRequest;
-import  vn.com.ecomstore.dtos.response.base.ResponseSuccess;
-import  vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
-import  vn.com.ecomstore.dtos.response.customer.CustomerResponse;
+import vn.com.ecomstore.dtos.request.customer.CustomerAddRequest;
+import vn.com.ecomstore.dtos.request.customer.CustomerProfileRequest;
+import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
+import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
+import vn.com.ecomstore.dtos.response.customer.CustomerResponse;
+import vn.com.ecomstore.services.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.com.ecomstore.services.CustomerService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -70,6 +70,15 @@ public class CustomerController {
         ));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseSuccess<String>> deleteCustomer(@PathVariable long id){
+        customerService.deleteCustomer(id);
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                OK,
+                "Delete Customer success",
+                "Deleted successfully"
+        ));
+    }
 
     @PutMapping("/change-status/{id}")
     public ResponseEntity<ResponseSuccess<Void>> changeStatusCustomer(@PathVariable Long id) {

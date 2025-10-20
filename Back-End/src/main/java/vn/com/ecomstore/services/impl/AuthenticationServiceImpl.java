@@ -8,26 +8,26 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import io.jsonwebtoken.JwtException;
 import vn.com.ecomstore.configurations.jwt.JwtUtil;
 import vn.com.ecomstore.dtos.request.authentication.LoginRequest;
-import vn.com.ecomstore.dtos.request.authentication.RefreshTokenRequest;
+import vn.com.ecomstore.dtos.request.authentication.RegisterRequest;
 import vn.com.ecomstore.dtos.response.authentication.LoginResponse;
 import vn.com.ecomstore.dtos.response.authentication.RefreshTokenResponse;
 import vn.com.ecomstore.dtos.response.user.UserProfileResponse;
 import vn.com.ecomstore.entities.*;
 import vn.com.ecomstore.enums.TokenType;
+import vn.com.ecomstore.exceptions.custom.ConflictException;
 import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
 import vn.com.ecomstore.exceptions.custom.UnauthorizedException;
 import vn.com.ecomstore.mappers.UserMapper;
-import vn.com.ecomstore.repositories.CustomerRepository;
-import vn.com.ecomstore.repositories.RoleRepository;
-import vn.com.ecomstore.repositories.StaffRepository;
-import vn.com.ecomstore.repositories.UserRepository;
+import vn.com.ecomstore.repositories.*;
 import vn.com.ecomstore.services.AuthenticationService;
 import vn.com.ecomstore.utils.SecurityUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,16 +37,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
+    private final RankingRepository rankingRepository;
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
 
@@ -69,6 +67,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final SecurityUtil securityUtil;
@@ -100,17 +99,64 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
-        String refreshToken = refreshTokenRequest.getRefreshToken();
+    public void register(RegisterRequest registerRequest) {
+        if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
+            throw new BadCredentialsException("Password and confirm password do not match");
+        }
+
+        if (customerRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new ConflictException("Email already registered: " + registerRequest.getEmail());
+        }
+
+        if (customerRepository.existsByPhone(registerRequest.getPhone())) {
+            throw new ConflictException("Phone already registered: " + registerRequest.getPhone());
+        }
+
+        Customer customer = Customer.builder()
+                .email(registerRequest.getEmail())
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .fullName(registerRequest.getFullName())
+                .dateOfBirth(registerRequest.getDateOfBirth())
+                .active(true)
+                .totalSpending(0.0)
+                .ranking(rankingRepository.findByName("S-NEW"))
+                .userRoles(new ArrayList<>())
+                .build();
+
+        addRoleCustomer(customer);
+
+        customerRepository.save(customer);
+    }
+
+    @Override
+    public RefreshTokenResponse refreshToken(HttpServletRequest request) {
+        String refreshToken = getRefreshTokenFromCookie(request);
+
+        if (refreshToken == null) {
+           throw new BadCredentialsException("Refresh token not found in cookies");
+        }
+
         if (!jwtUtil.validateJwtToken(refreshToken, TokenType.REFRESH_TOKEN)) {
             throw new JwtException("Invalid or expired refresh token");
         }
         String email = jwtUtil.getUserNameFromJwtToken(refreshToken, TokenType.REFRESH_TOKEN);
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + email));
 
-        if (!refreshToken.equals(user.getRefreshToken())) {
-            throw new BadCredentialsException("Invalid refresh token");
+        RefreshToken dbToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+
+        if (!dbToken.getUser().getId().equals(user.getId())) {
+            throw new BadCredentialsException("Refresh token does not belong to user");
+        }
+
+        if (dbToken.getRevoked()) {
+            throw new UnauthorizedException("Refresh token revoked");
+        }
+
+        if (dbToken.getExpiryDate().isBefore(LocalDate.now())) {
+            throw new JwtException("Refresh token expired");
         }
 
         if (!user.getActive()) {
@@ -118,6 +164,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String accessToken = jwtUtil.generateAccessToken(user);
+
         return RefreshTokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -128,7 +175,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void logout(HttpServletRequest request) {
+        User currentUser = securityUtil.getCurrentUser();
+        String refreshToken = getRefreshTokenFromCookie(request);
 
+        if (refreshToken == null) {
+            List<RefreshToken> tokens = refreshTokenRepository.findAllByUserId(currentUser.getId());
+            tokens.forEach(t -> {
+                t.setRevoked(true);
+            });
+            refreshTokenRepository.saveAll(tokens);
+            return;
+        }
+
+        refreshTokenRepository.findByToken(refreshToken)
+                .ifPresent(token -> {
+                    if (!token.getUser().getId().equals(currentUser.getId())) {
+                        throw new AccessDeniedException("Token does not belong to current user");
+                    }
+                    token.setRevoked(true);
+                    refreshTokenRepository.save(token);
+                });
+
+    }
+
+    private String getRefreshTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        String refreshToken = null;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        return refreshToken;
     }
 
     @Override
@@ -188,7 +270,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             customer.setFullName(userInfo.get("name").toString());
             customer.setActive(true);
             customer.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            customer.setRegisterDate(LocalDate.now());
+//            customer.setRegisterDate(LocalDate.now());
             addRoleCustomer(customer);
             customer = customerRepository.save(customer);
         }
@@ -218,9 +300,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String token = jwtUtil.generateAccessToken(user);
-        String refreshToken = jwtUtil.generateRefreshToken(user);
+        String refreshTokenStr  = jwtUtil.generateRefreshToken(user);
+        LocalDate expiryDate = jwtUtil.getExpirationDateFromToken(refreshTokenStr, TokenType.REFRESH_TOKEN);
 
-        user.setRefreshToken(refreshToken);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(refreshTokenStr)
+                .expiryDate(expiryDate)
+                .deviceInfo(loginRequest.getDeviceInfo())
+                .revoked(false)
+                .user(user)
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
         saveUser.apply(user);
 
         List<String> roles = user.getUserRoles()
@@ -230,7 +321,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return LoginResponse.builder()
                 .accessToken(token)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshTokenStr)
                 .roles(roles)
                 .email(user.getEmail())
                 .build();
@@ -238,10 +329,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private LoginResponse loginSocial(Customer customer) {
         String accessToken = jwtUtil.generateAccessToken(customer);
-        String refreshToken = jwtUtil.generateRefreshToken(customer);
+        String refreshTokenStr = jwtUtil.generateRefreshToken(customer);
+        LocalDate expiryDate = jwtUtil.getExpirationDateFromToken(refreshTokenStr, TokenType.REFRESH_TOKEN);
 
-        customer.setRefreshToken(refreshToken);
-        customerRepository.save(customer);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(refreshTokenStr)
+                .expiryDate(expiryDate)
+                .deviceInfo("social-login")
+                .revoked(false)
+                .user(customer)
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
 
         List<String> roles = customer.getUserRoles()
                 .stream()
@@ -250,7 +349,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshTokenStr)
                 .roles(roles)
                 .email(customer.getEmail())
                 .build();

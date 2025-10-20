@@ -22,8 +22,10 @@ public class Variant extends BaseEntity{
     private String name;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean status = true;
+
+    @Column
+    private String slug;
 
     @ManyToOne
     @JoinColumn( name = "category_id", nullable = false)

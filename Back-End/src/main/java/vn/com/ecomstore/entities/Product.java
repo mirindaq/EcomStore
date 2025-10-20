@@ -57,14 +57,14 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @OneToMany(mappedBy = "product")
-    private List<ProductAttributeValue> attributes;
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL ,orphanRemoval = true)
+    private List<ProductAttributeValue> attributes = new ArrayList<>();
 
 
     @OneToMany(mappedBy = "product",
             fetch = FetchType.LAZY,
-            cascade = { CascadeType.MERGE, CascadeType.PERSIST})
-    private List<ProductImage> productImages;
+            cascade = { CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<ProductImage> productImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL ,orphanRemoval = true)
     private List<ProductVariant> productVariants = new ArrayList<>();

@@ -1,9 +1,8 @@
 package vn.com.ecomstore.repositories;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import vn.com.ecomstore.entities.VariantValue;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface VariantValueRepository extends JpaRepository<VariantValue, Long> {

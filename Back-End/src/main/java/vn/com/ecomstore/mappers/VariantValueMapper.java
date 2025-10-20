@@ -1,9 +1,9 @@
 package vn.com.ecomstore.mappers;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import vn.com.ecomstore.dtos.response.variant.VariantValueResponse;
 import vn.com.ecomstore.entities.VariantValue;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface VariantValueMapper {

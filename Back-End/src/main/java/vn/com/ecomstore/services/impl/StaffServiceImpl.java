@@ -1,22 +1,23 @@
 package vn.com.ecomstore.services.impl;
 
-import  vn.com.ecomstore.dtos.request.staff.StaffAddRequest;
-import  vn.com.ecomstore.dtos.request.staff.StaffUpdateRequest;
-import  vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
-import  vn.com.ecomstore.dtos.response.staff.StaffResponse;
-import  vn.com.ecomstore.entities.Role;
-import  vn.com.ecomstore.entities.Staff;
-import  vn.com.ecomstore.entities.UserRole;
-import  vn.com.ecomstore.exceptions.custom.ConflictException;
-import  vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
-import  vn.com.ecomstore.mappers.StaffMapper;
-import  vn.com.ecomstore.repositories.RoleRepository;
-import  vn.com.ecomstore.repositories.StaffRepository;
-import  vn.com.ecomstore.services.StaffService;
+import vn.com.ecomstore.dtos.request.staff.StaffAddRequest;
+import vn.com.ecomstore.dtos.request.staff.StaffUpdateRequest;
+import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
+import vn.com.ecomstore.dtos.response.staff.StaffResponse;
+import vn.com.ecomstore.entities.Role;
+import vn.com.ecomstore.entities.Staff;
+import vn.com.ecomstore.entities.UserRole;
+import vn.com.ecomstore.exceptions.custom.ConflictException;
+import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
+import vn.com.ecomstore.mappers.StaffMapper;
+import vn.com.ecomstore.repositories.RoleRepository;
+import vn.com.ecomstore.repositories.StaffRepository;
+import vn.com.ecomstore.services.StaffService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class StaffServiceImpl implements StaffService {
     private final RoleRepository roleRepository;
     private final StaffRepository staffRepository;
     private final StaffMapper staffMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -107,7 +109,7 @@ public class StaffServiceImpl implements StaffService {
                 .avatar(staffAddRequest.getAvatar())
                 .email(staffAddRequest.getEmail())
                 .fullName(staffAddRequest.getFullName())
-                .password(staffAddRequest.getPassword())
+                .password(passwordEncoder.encode(staffAddRequest.getPassword()))
                 .phone(staffAddRequest.getPhone())
                 .dateOfBirth(staffAddRequest.getDateOfBirth())
                 .active(staffAddRequest.isActive())

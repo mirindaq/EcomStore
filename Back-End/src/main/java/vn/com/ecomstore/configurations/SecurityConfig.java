@@ -1,7 +1,13 @@
 package vn.com.ecomstore.configurations;
+import vn.com.ecomstore.configurations.jwt.AuthTokenFilter;
+import vn.com.ecomstore.constraints.Endpoints;
+import vn.com.ecomstore.exceptions.custom.CustomAccessDeniedHandler;
+import vn.com.ecomstore.exceptions.custom.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -9,19 +15,18 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import vn.com.ecomstore.configurations.jwt.AuthTokenFilter;
-import vn.com.ecomstore.constraints.Endpoints;
-import vn.com.ecomstore.exceptions.custom.CustomAccessDeniedHandler;
-import vn.com.ecomstore.exceptions.custom.CustomAuthenticationEntryPoint;
 
 import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig implements WebMvcConfigurer {
 
-
+    @Value("${app.upload-dir}")
+    private String uploadDir;
     private final AuthTokenFilter authTokenFilter;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
@@ -46,8 +51,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
-//                        .requestMatchers(Endpoints.PUBLIC_ENDPOINT).permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(Endpoints.PRIVATE_ENDPOINT).authenticated()
+                                .anyRequest().permitAll()
                 )
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
@@ -56,6 +61,13 @@ public class SecurityConfig implements WebMvcConfigurer {
                 );
         return http.build();
     }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + System.getProperty("user.dir") + "/uploads/");
+    }
+
 
 
 }

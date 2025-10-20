@@ -1,7 +1,7 @@
 package vn.com.ecomstore.dtos.request.customer;
 
-import  vn.com.ecomstore.entities.Cart;
-import  vn.com.ecomstore.entities.UserRole;
+import vn.com.ecomstore.entities.Cart;
+import vn.com.ecomstore.entities.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -15,8 +15,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class CustomerAddRequest {
 
     @NotBlank(message = "Full name is required")

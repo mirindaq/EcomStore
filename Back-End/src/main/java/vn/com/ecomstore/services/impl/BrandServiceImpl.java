@@ -1,11 +1,5 @@
 package vn.com.ecomstore.services.impl;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import vn.com.ecomstore.dtos.request.brand.BrandAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.brand.BrandResponse;
@@ -15,6 +9,13 @@ import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
 import vn.com.ecomstore.mappers.BrandMapper;
 import vn.com.ecomstore.repositories.BrandRepository;
 import vn.com.ecomstore.services.BrandService;
+import vn.com.ecomstore.utils.StringUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -72,8 +73,6 @@ public class BrandServiceImpl implements BrandService {
         brand.setStatus(!brand.getStatus());
         brandRepository.save(brand);
     }
-
-    @Override
     public Brand getBrandEntityById(Long id) {
         return brandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
@@ -95,5 +94,6 @@ public class BrandServiceImpl implements BrandService {
         brand.setImage(request.getImage());
         brand.setOrigin(request.getOrigin());
         brand.setStatus(Boolean.TRUE.equals(request.getStatus()));
+        brand.setSlug(StringUtils.normalizeString(request.getName()));
     }
 }
