@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import placeholder from "@/assets/placeholder-image.png";
 import { Search, Edit, Trash2, Power, PowerOff, Loader2 } from "lucide-react"
 import type { Brand } from "@/types/brand.type"
 
@@ -128,12 +127,12 @@ export default function BrandTable({
                   <TableCell>
                     <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
                       <img
-                        src={brand.image || placeholder}
+                        src={brand.image || "/assets/avatar.jpg"}
                         alt={brand.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
-                          target.src = placeholder
+                          target.src = "/assets/avatar.jpg"
                         }}
                       />
                     </div>
