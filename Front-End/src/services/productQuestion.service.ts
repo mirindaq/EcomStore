@@ -1,6 +1,7 @@
 import axiosClient from "@/configurations/axios.config";
 import type {
   ProductQuestionAddRequest,
+  ProductQuestionAnswerAddRequest,
   ProductQuestionListResponse,
   ProductQuestionResponse,
 } from "@/types/productQuestion.type";
@@ -22,6 +23,15 @@ export const productQuestionService = {
   createProductQuestion: async (data: ProductQuestionAddRequest) => {
     const response = await axiosClient.post<ProductQuestionResponse>(
       `/product-questions`,
+      data
+    );
+    return response.data;
+  },
+
+  // Tạo phản hồi cho câu hỏi
+  createProductQuestionAnswer: async (data: ProductQuestionAnswerAddRequest) => {
+    const response = await axiosClient.post<ProductQuestionResponse>(
+      `/product-questions/answer`,
       data
     );
     return response.data;

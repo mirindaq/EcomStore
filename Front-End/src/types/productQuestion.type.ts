@@ -23,5 +23,10 @@ export type ProductQuestionAddRequest = {
   productId: number;
 };
 
+export type ProductQuestionAnswerAddRequest = {
+  content: string;
+  productQuestionId: number;
+};
+
 export type ProductQuestionResponse = ResponseApi<ProductQuestion>;
 export type ProductQuestionListResponse = ResponseApiWithPagination<ProductQuestion[]>;

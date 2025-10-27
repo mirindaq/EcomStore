@@ -152,7 +152,7 @@ export default function Membership() {
                     return (
                       <Card
                         key={rank.id}
-                        className={`flex-shrink-0 ${isCurrent
+                        className={`shrink-0 ${isCurrent
                           ? `${colors.bg} border-2 ${colors.border}`
                           : isUnlocked
                             ? `${colors.bg} opacity-90`

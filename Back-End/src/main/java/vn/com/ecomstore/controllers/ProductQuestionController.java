@@ -1,6 +1,7 @@
 package vn.com.ecomstore.controllers;
 
 import vn.com.ecomstore.dtos.request.productQuestion.ProductQuestionAddRequest;
+import vn.com.ecomstore.dtos.request.productQuestion.ProductQuestionAnswerAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseSuccess;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.productQuestion.ProductQuestionResponse;
@@ -46,6 +47,18 @@ public class ProductQuestionController {
                 CREATED,
                 "Create product question success",
                 productQuestionService.createProductQuestion(request)
+        ));
+    }
+
+    @PostMapping("/answer")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ResponseSuccess<ProductQuestionResponse>> createProductQuestionAnswer(
+            @Valid @RequestBody ProductQuestionAnswerAddRequest request) {
+
+        return ResponseEntity.ok(new ResponseSuccess<>(
+                CREATED,
+                "Create product question success",
+                productQuestionService.createProductQuestionAnswer(request)
         ));
     }
 }

@@ -1,11 +1,12 @@
 package vn.com.ecomstore.services.impl;
 
+import org.springframework.data.domain.Sort;
 import vn.com.ecomstore.dtos.request.productQuestion.ProductQuestionAddRequest;
+import vn.com.ecomstore.dtos.request.productQuestion.ProductQuestionAnswerAddRequest;
 import vn.com.ecomstore.dtos.response.base.ResponseWithPagination;
 import vn.com.ecomstore.dtos.response.productQuestion.ProductQuestionResponse;
-import vn.com.ecomstore.entities.Product;
-import vn.com.ecomstore.entities.ProductQuestion;
-import vn.com.ecomstore.entities.User;
+import vn.com.ecomstore.entities.*;
+import vn.com.ecomstore.exceptions.custom.ResourceNotFoundException;
 import vn.com.ecomstore.mappers.ProductQuestionMapper;
 import vn.com.ecomstore.repositories.ProductQuestionRepository;
 import vn.com.ecomstore.services.ProductQuestionService;
@@ -46,13 +47,34 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     @Override
     public ResponseWithPagination<List<ProductQuestionResponse>> getProductQuestionsByProductSlug(String slug, int page, int size) {
         page = Math.max(0, page - 1);
-        Pageable pageable = PageRequest.of(page, size);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Product product = productService.getProductEntityBySlug(slug);
 
         Page<ProductQuestion> productQuestionsPage = productQuestionRepository.findByProduct(product, pageable);
 
         return ResponseWithPagination.fromPage(productQuestionsPage, productQuestionMapper::toResponse);
+    }
+
+    @Override
+    public ProductQuestionResponse createProductQuestionAnswer(ProductQuestionAnswerAddRequest request) {
+        User user = securityUtil.getCurrentUser();
+
+        ProductQuestion productQuestion = productQuestionRepository.findById(request.getProductQuestionId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product question not found with id: " + request.getProductQuestionId()));
+
+
+        ProductQuestionAnswer productQuestionAnswer = ProductQuestionAnswer.builder()
+                .user(user)
+                .productQuestion(productQuestion)
+                .admin(user instanceof Staff)
+                .content(request.getContent())
+                .build();
+
+        productQuestion.getAnswers().add(productQuestionAnswer);
+
+        return productQuestionMapper.toResponse(productQuestionRepository.save(productQuestion));
     }
 
 }

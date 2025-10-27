@@ -2,15 +2,19 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageCircle, ChevronUp, Clock } from "lucide-react";
+import { MessageCircle, ChevronUp, Clock, Send, ChevronDown } from "lucide-react";
 import type { ProductQuestion, ProductQuestionAnswer } from "@/types/productQuestion.type";
 
 interface QuestionItemProps {
   question: ProductQuestion;
+  onAnswerSubmit?: (questionId: number, content: string) => void;
+  isAnswering?: boolean;
 }
 
-export default function QuestionItem({ question }: QuestionItemProps) {
-  const [expandedAnswers, setExpandedAnswers] = useState(false);
+export default function QuestionItem({ question, onAnswerSubmit, isAnswering = false }: QuestionItemProps) {
+  const [expandedAnswers, setExpandedAnswers] = useState(question.answers && question.answers.length > 0);
+  const [showAnswerForm, setShowAnswerForm] = useState(false);
+  const [answerContent, setAnswerContent] = useState("");
 
   // Helper function to get user initials for avatar
   const getUserInitials = (name: string) => {
@@ -41,11 +45,25 @@ export default function QuestionItem({ question }: QuestionItemProps) {
     setExpandedAnswers(!expandedAnswers);
   };
 
+  // Handle answer form submission
+  const handleAnswerSubmit = () => {
+    if (!answerContent.trim() || !onAnswerSubmit) return;
+
+    onAnswerSubmit(question.id, answerContent.trim());
+    setAnswerContent("");
+    setShowAnswerForm(false);
+  };
+
+  // Toggle answer form
+  const toggleAnswerForm = () => {
+    setShowAnswerForm(!showAnswerForm);
+  };
+
   return (
     <div className="border-b border-gray-200 pb-6 last:border-b-0">
       <div className="flex items-start gap-4">
         {/* User Avatar */}
-        <Avatar className="w-10 h-10 flex-shrink-0">
+        <Avatar className="w-10 h-10 shrink-0">
           <AvatarFallback className="bg-purple-600 text-white font-semibold text-sm">
             {getUserInitials(question.userName)}
           </AvatarFallback>
@@ -66,26 +84,87 @@ export default function QuestionItem({ question }: QuestionItemProps) {
           {/* Question Content */}
           <p className="text-gray-700 text-sm leading-relaxed mb-3">{question.content}</p>
 
-          {/* Reply Button */}
-          {question.answers && question.answers.length > 0 && (
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            {/* Reply Button - only show if there are answers */}
+            {question.answers && question.answers.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleAnswers}
+                className="h-auto p-0 text-red-600 hover:text-red-700 hover:bg-transparent font-medium text-sm"
+              >
+                {expandedAnswers ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    Thu gọn phản hồi
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Chi tiết phản hồi
+                  </>
+                )}
+              </Button>
+            )}
+
+            {/* Answer Button - only allow replying to original question */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={toggleAnswers}
+              onClick={toggleAnswerForm}
               className="h-auto p-0 text-red-600 hover:text-red-700 hover:bg-transparent font-medium text-sm"
             >
-              {expandedAnswers ? (
-                <>
-                  <ChevronUp className="w-4 h-4" />
-                  Thu gọn phản hồi ^
-                </>
-              ) : (
-                <>
-                  <MessageCircle className="w-4 h-4" />
-                  Phản hồi
-                </>
-              )}
+              <MessageCircle className="w-4 h-4" />
+              Phản hồi
             </Button>
+          </div>
+
+          {/* Answer Form */}
+          {showAnswerForm && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-gray-800 text-sm">Trả lời câu hỏi</h4>
+                <textarea
+                  value={answerContent}
+                  onChange={(e) => setAnswerContent(e.target.value)}
+                  placeholder="Viết câu trả lời của bạn tại đây..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm"
+                  rows={3}
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleAnswerSubmit}
+                    disabled={!answerContent.trim() || isAnswering}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isAnswering ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Đang gửi...
+                      </>
+                    ) : (
+                      <>
+                        Gửi phản hồi
+                        <Send className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowAnswerForm(false);
+                      setAnswerContent("");
+                    }}
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Answers Section */}
@@ -93,10 +172,10 @@ export default function QuestionItem({ question }: QuestionItemProps) {
             <div className="mt-4 space-y-4">
               {question.answers.map((answer: ProductQuestionAnswer) => (
                 <div key={answer.id} className="flex items-start gap-4 pl-4 border-l-2 border-gray-100">
-                  {/* Admin Avatar */}
-                  <Avatar className="w-10 h-10 flex-shrink-0">
-                    <AvatarFallback className="bg-red-600 text-white font-bold text-xs">
-                      S
+                  {/* Answer Avatar - Admin or User */}
+                  <Avatar className="w-10 h-10 shrink-0">
+                    <AvatarFallback className={answer.admin ? "bg-red-600 text-white font-bold text-xs" : "bg-purple-600 text-white font-semibold text-sm"}>
+                      {answer.admin ? "S" : getUserInitials(answer.userName || "U")}
                     </AvatarFallback>
                   </Avatar>
 
@@ -104,11 +183,11 @@ export default function QuestionItem({ question }: QuestionItemProps) {
                     {/* Answer Header */}
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-semibold text-gray-900 text-sm">
-                        {answer.userName || "Quản Trị Viên"}
+                        {answer.admin ? "Quản Trị Viên" : (answer.userName || "Người dùng")}
                       </span>
                       {answer.admin && (
-                        <Badge 
-                          variant="destructive" 
+                        <Badge
+                          variant="destructive"
                           className="text-xs px-2 py-0.5 h-5"
                         >
                           QTV
@@ -151,16 +230,6 @@ export default function QuestionItem({ question }: QuestionItemProps) {
                         );
                       })}
                     </div>
-
-                    {/* Reply Button for Answer */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto p-0 text-red-600 hover:text-red-700 hover:bg-transparent font-medium text-sm mt-2"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Phản hồi
-                    </Button>
                   </div>
                 </div>
               ))}

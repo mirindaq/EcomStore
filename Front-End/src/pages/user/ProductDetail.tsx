@@ -34,7 +34,6 @@ import QuestionPagination from "@/components/user/QuestionPagination";
 import { useQuery } from "@/hooks/useQuery";
 import { useMutation } from "@/hooks/useMutation";
 
-
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -216,6 +215,21 @@ export default function ProductDetail() {
     }
   );
 
+  const createAnswerMutation = useMutation(
+    (data: { content: string; productQuestionId: number }) => productQuestionService.createProductQuestionAnswer(data),
+    {
+      onSuccess: () => {
+        toast.success('Trả lời đã được gửi thành công!');
+        setAllQuestions([]); // Reset danh sách câu hỏi
+        setCurrentPage(1); // Reset về trang đầu khi thêm câu trả lời mới
+        refetchQuestions();
+      },
+      onError: () => {
+        toast.error('Không thể gửi trả lời');
+      }
+    }
+  );
+
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       setShowLoginModal(true);
@@ -283,6 +297,23 @@ export default function ProductDetail() {
     });
   };
 
+  const handleAnswerSubmit = async (questionId: number, content: string) => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!content.trim()) {
+      toast.error('Vui lòng nhập câu trả lời');
+      return;
+    }
+
+    await createAnswerMutation.mutate({
+      content: content.trim(),
+      productQuestionId: questionId
+    });
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -297,7 +328,7 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
@@ -340,7 +371,7 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -363,7 +394,7 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100">
       {/* Breadcrumb */}
       <div className="bg-white/80 backdrop-blur-sm border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -426,7 +457,7 @@ export default function ProductDetail() {
                   {product.productImages.map((image, index) => (
                     <div
                       key={index}
-                      className={`relative flex-shrink-0 cursor-pointer group transition-all duration-200 ${index === currentImageIndex
+                      className={`relative shrink-0 cursor-pointer group transition-all duration-200 ${index === currentImageIndex
                         ? 'ring-2 ring-red-500 ring-offset-2 scale-105'
                         : 'hover:scale-105'
                         }`}
@@ -452,7 +483,7 @@ export default function ProductDetail() {
                       </div>
                     </div>
                   ))}
-                  <div className="flex items-center justify-center w-24 h-24 border-1 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-center w-24 h-24 border border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer">
                     <ChevronRight className="w-6 h-6 text-gray-400" />
                   </div>
                 </div>
@@ -470,7 +501,7 @@ export default function ProductDetail() {
               <CardContent>
                 <div className="space-y-6">
                   <div className="flex items-start gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
                       <Check className="w-5 h-5 text-green-600" />
                     </div>
                     <div className="space-y-1">
@@ -480,7 +511,7 @@ export default function ProductDetail() {
                   </div>
 
                   <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
                       <Shield className="w-5 h-5 text-blue-600" />
                     </div>
                     <div className="space-y-1">
@@ -490,7 +521,7 @@ export default function ProductDetail() {
                   </div>
 
                   <div className="flex items-start gap-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
                       <Truck className="w-5 h-5 text-orange-600" />
                     </div>
                     <div className="space-y-1">
@@ -506,7 +537,7 @@ export default function ProductDetail() {
           {/* Right Column - Purchase Options */}
           <div className="space-y-6 lg:col-span-5">
             {/* Price */}
-            <Card className="border-1 border-red-100">
+            <Card className="border border-red-100">
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Zap className="w-5 h-5 text-red-600" />
@@ -582,7 +613,7 @@ export default function ProductDetail() {
                           {availableVariants[variantName].map((value) => (
                             <button
                               key={value}
-                              className={`p-4 text-sm border-1 rounded-xl transition-all duration-300 group ${selectedVariants[variantName] === value
+                              className={`p-4 text-sm border rounded-xl transition-all duration-300 group ${selectedVariants[variantName] === value
                                 ? 'border-red-500 text-red-700 font-semibold shadow-md scale-105'
                                 : 'border-gray-200 hover:border-red-300 hover:bg-gray-50 text-gray-700 hover:shadow-sm hover:scale-102'
                                 }`}
@@ -620,7 +651,7 @@ export default function ProductDetail() {
                   </Button>
 
                   <Button
-                    className="col-span-1 h-16 bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold text-lg py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                    className="col-span-1 h-16 bg-linear-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold text-lg py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                     onClick={handleBuyNow}
                   >
                     <div className="text-center">
@@ -673,7 +704,7 @@ export default function ProductDetail() {
               <div className="space-y-4">
                 {attributes.slice(0, Math.ceil(attributes.length / 2)).map((attr, index) => (
                   <div key={index} className="flex group hover:bg-gray-50 transition-colors rounded-lg">
-                    <div className="w-1/3 bg-gradient-to-r from-gray-100 to-gray-50 p-4 font-semibold text-gray-700 border-r border-gray-200 rounded-l-lg">
+                    <div className="w-1/3 bg-linear-to-r from-gray-100 to-gray-50 p-4 font-semibold text-gray-700 border-r border-gray-200 rounded-l-lg">
                       {attr.attribute.name}
                     </div>
                     <div className="w-2/3 bg-white p-4 text-gray-900 font-medium rounded-r-lg">
@@ -686,7 +717,7 @@ export default function ProductDetail() {
               <div className="space-y-4">
                 {attributes.slice(Math.ceil(attributes.length / 2)).map((attr, index) => (
                   <div key={index} className="flex group hover:bg-gray-50 transition-colors rounded-lg">
-                    <div className="w-1/3 bg-gradient-to-r from-gray-100 to-gray-50 p-4 font-semibold text-gray-700 border-r border-gray-200 rounded-l-lg">
+                    <div className="w-1/3 bg-linear-to-r from-gray-100 to-gray-50 p-4 font-semibold text-gray-700 border-r border-gray-200 rounded-l-lg">
                       {attr.attribute.name}
                     </div>
                     <div className="w-2/3 bg-white p-4 text-gray-900 font-medium rounded-r-lg">
@@ -708,10 +739,10 @@ export default function ProductDetail() {
           </CardHeader>
           <CardContent>
             {/* Introduction Section with Mascot */}
-            <div className="mb-6 p-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-100">
+            <div className="mb-6 p-6 bg-linear-to-r from-red-50 to-orange-50 rounded-lg border border-red-100">
               <div className="flex items-start gap-4">
                 {/* Mascot Icon */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <img 
                     src="/assets/bee.png" 
                     alt="CellphoneS Mascot" 
@@ -784,7 +815,12 @@ export default function ProductDetail() {
               ) : (
                 <>
                   {allQuestions.map((question) => (
-                    <QuestionItem key={question.id} question={question} />
+                    <QuestionItem 
+                      key={question.id} 
+                      question={question} 
+                      onAnswerSubmit={handleAnswerSubmit}
+                      isAnswering={createAnswerMutation.isLoading}
+                    />
                   ))}
                   
                   {/* Load More Button */}
@@ -815,7 +851,7 @@ export default function ProductDetail() {
           </Button>
           <Button
             size="lg"
-            className="w-14 h-14 rounded-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+            className="w-14 h-14 rounded-full bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
           >
             <Headphones className="w-6 h-6" />
           </Button>

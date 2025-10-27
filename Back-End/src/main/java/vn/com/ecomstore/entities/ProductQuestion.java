@@ -34,7 +34,7 @@ public class ProductQuestion extends BaseEntity{
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @OneToMany( fetch =  FetchType.LAZY)
+    @OneToMany( fetch =  FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
     private List<ProductQuestionAnswer> answers = new ArrayList<ProductQuestionAnswer>();
 
