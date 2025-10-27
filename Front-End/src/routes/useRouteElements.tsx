@@ -15,6 +15,7 @@ import Staffs from "@/pages/admin/Staff"
 import Home from "@/pages/user/Home"
 import ProductDetail from "@/pages/user/ProductDetail"
 import Cart from "@/pages/user/Cart"
+import Checkout from "@/pages/user/Checkout"
 import Profile from "@/pages/user/Profile"
 import Membership from "@/pages/user/Membership"
 import AdminLayout from "@/layouts/AdminLayout"
@@ -59,6 +60,14 @@ const useRouteElements = () => {
           element: (
             <UserRoute>
               <Cart />
+            </UserRoute>
+          )
+        },
+        {
+          path: "checkout",
+          element: (
+            <UserRoute>
+              <Checkout />
             </UserRoute>
           )
         },

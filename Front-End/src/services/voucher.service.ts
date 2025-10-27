@@ -6,7 +6,8 @@ import type {
   VoucherResponse,
   VoucherListResponse,
   VoucherAvailableResponse,
-  Voucher
+  Voucher,
+  VoucherAvailableListResponse
 } from '@/types/voucher.type';
 
 export const voucherService = {
@@ -40,12 +41,12 @@ export const voucherService = {
   },
 
   createVoucher: async (request: CreateVoucherRequest) => {
-    const response = await axiosClient.post<Voucher>('/vouchers', request);
+    const response = await axiosClient.post<VoucherResponse>('/vouchers', request);
     return response.data;
   },
 
   updateVoucher: async (id: number, request: UpdateVoucherRequest) => {
-    const response = await axiosClient.put<Voucher>(`/vouchers/${id}`, request);
+    const response = await axiosClient.put<VoucherResponse>(`/vouchers/${id}`, request);
     return response.data;
   },
 
@@ -58,7 +59,7 @@ export const voucherService = {
   },
 
   getAvailableVouchers: async () => {
-    const response = await axiosClient.get<VoucherAvailableResponse[]>('/vouchers/available');
+    const response = await axiosClient.get<VoucherAvailableListResponse>('/vouchers/available');
     return response.data;
   }
 };

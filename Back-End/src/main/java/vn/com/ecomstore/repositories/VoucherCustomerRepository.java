@@ -1,5 +1,6 @@
 package vn.com.ecomstore.repositories;
 
+import vn.com.ecomstore.entities.Voucher;
 import vn.com.ecomstore.entities.VoucherCustomer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface VoucherCustomerRepository extends JpaRepository<VoucherCustomer, Long> {
     List<VoucherCustomer> findAllByVoucher_Id(Long voucherId);
@@ -24,5 +26,4 @@ public interface VoucherCustomerRepository extends JpaRepository<VoucherCustomer
             @Param("id") Long id,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
-
 }

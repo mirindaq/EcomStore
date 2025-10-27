@@ -221,7 +221,7 @@ export default function Membership() {
                 </AlertDescription>
               </Alert>
 
-              {/* Chính sách phục vụ */}
+              {/* Chính sách phục vụ */}  
               <Alert>
                 <AlertTitle>CHÍNH SÁCH PHỤC VỤ</AlertTitle>
                 <AlertDescription>

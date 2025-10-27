@@ -17,8 +17,6 @@ export type VoucherCustomer = {
   voucherCustomerStatus: VoucherCustomerStatus;
 };
 
-
-
 export type Voucher = {
   id: number;
   code: string;
@@ -67,11 +65,6 @@ export type UpdateVoucherRequest = {
   voucherCustomers?: VoucherCustomerRequest[];
   rankId?: number;
 };
-
-export type VoucherResponse = ResponseApi<Voucher>;
-
-export type VoucherListResponse = ResponseApiWithPagination<Voucher[]>;
-
 export type VoucherAvailableResponse = {
   id: number;
   code: string;
@@ -84,3 +77,9 @@ export type VoucherAvailableResponse = {
   discount: number;
   voucherType: VoucherType;
 };
+export type VoucherResponse = ResponseApi<Voucher>;
+
+export type VoucherListResponse = ResponseApiWithPagination<Voucher[]>;
+export type VoucherAvailableListResponse = ResponseApi<
+  VoucherAvailableResponse[]
+>;

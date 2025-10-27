@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     @Query("""
@@ -31,4 +32,17 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
             , LocalDate startDateIsLessThan);
 
     boolean existsByCode(String code);
+
+    @Query("""
+    SELECT vc.voucher
+    FROM VoucherCustomer vc
+    WHERE vc.customer.id = :customerId AND vc.code = :code
+""")
+    Optional<Voucher> findCustomerVoucherByCode(@Param("code") String code,
+                                                @Param("customerId") Long customerId);
+
+    Optional<Voucher> findByCode(String code); // voucher global
+
+
+
 }

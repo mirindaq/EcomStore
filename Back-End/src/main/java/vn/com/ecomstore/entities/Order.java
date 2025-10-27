@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -29,8 +30,6 @@ public class Order extends BaseEntity {
     @Column( nullable = false, name = "receiver_phone")
     private String receiverPhone;
 
-    @Column( name = "order_date")
-    private LocalDateTime orderDate;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -59,5 +58,5 @@ public class Order extends BaseEntity {
     private User user;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<OrderDetail> orderDetails;
+    private List<OrderDetail> orderDetails =  new ArrayList<>();
 }

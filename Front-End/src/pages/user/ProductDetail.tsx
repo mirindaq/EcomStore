@@ -27,71 +27,21 @@ import { PUBLIC_PATH } from "@/constants/path";
 import type { Product } from "@/types/product.type";
 import { toast } from "sonner";
 import LoginModal from "@/components/user/LoginModal";
+import { useQuery } from "@/hooks/useQuery";
+import { useMutation } from "@/hooks/useMutation";
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useUser();
-  const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   // Dynamic state for attributes and variants
   const [attributes, setAttributes] = useState<any[]>([]);
   const [availableVariants, setAvailableVariants] = useState<{ [key: string]: string[] }>({});
   const [selectedVariants, setSelectedVariants] = useState<{ [key: string]: string }>({});
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
-
-  // Load product data from API
-  useEffect(() => {
-    const loadProduct = async () => {
-      if (!slug) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await productService.getProductBySlug(slug);
-
-        if (response.status === 200 && response.data) {
-          setProduct(response.data);
-          setAttributes(response.data.attributes || []);
-
-          if (response.data.variants && response.data.variants.length > 0) {
-            setSelectedVariant(response.data.variants[0]);
-            extractVariantsFromProduct(response.data);
-          }
-        } else {
-          setError('Không tìm thấy sản phẩm');
-        }
-      } catch (error) {
-        console.error('Error loading product:', error);
-        setError('Có lỗi xảy ra khi tải sản phẩm');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProduct();
-  }, [slug]);
-
-  // Scroll to top functionality
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
 
   // Extract variants from API data dynamically
   const extractVariantsFromProduct = (product: Product) => {
@@ -125,6 +75,48 @@ export default function ProductDetail() {
     setSelectedVariants(defaultSelections);
   };
 
+  // Load product data from API
+  const { data: productData, isLoading: loading, error } = useQuery<{ status: number; data: Product }>(
+    () => productService.getProductBySlug(slug!),
+    {
+      queryKey: ['product', slug || ''],
+      enabled: !!slug,
+      onError: (err) => {
+        console.error('Error loading product:', err);
+      }
+    }
+  );
+
+  const product = productData?.data || null;
+
+  useEffect(() => {
+    if (product) {
+      setAttributes(product.attributes || []);
+
+      if (product.variants && product.variants.length > 0) {
+        setSelectedVariant(product.variants[0]);
+        extractVariantsFromProduct(product);
+      }
+
+    }
+  }, [product?.id]);
+
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
+  };
+
   // Find matching variant based on selections
   const findMatchingVariant = () => {
     if (!product?.variants) return null;
@@ -152,11 +144,25 @@ export default function ProductDetail() {
 
   // Update selected variant when selections change
   useEffect(() => {
+    if (!product) return;
     const matchingVariant = findMatchingVariant();
     if (matchingVariant) {
       setSelectedVariant(matchingVariant);
     }
-  }, [selectedVariants, product]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVariants, product?.id]);
+
+  const addToCartMutation = useMutation(
+    (data: { productVariantId: number; quantity: number }) => cartService.addProductToCart(data),
+    {
+      onSuccess: () => {
+        toast.success('Đã thêm vào giỏ hàng thành công!');
+      },
+      onError: () => {
+        toast.error('Không thể thêm vào giỏ hàng');
+      }
+    }
+  );
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -176,20 +182,10 @@ export default function ProductDetail() {
     console.log('Selected variants:', selectedVariants);
     console.log('Matching variant ID:', matchingVariant.id);
 
-    try {
-      setIsAddingToCart(true);
-      await cartService.addProductToCart({
-        productVariantId: matchingVariant.id,
-        quantity: 1
-      });
-
-      toast.success('Đã thêm vào giỏ hàng thành công!');
-    } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', error);
-      toast.error('Không thể thêm vào giỏ hàng');
-    } finally {
-      setIsAddingToCart(false);
-    }
+    await addToCartMutation.mutate({
+      productVariantId: matchingVariant.id,
+      quantity: 1
+    });
   };
 
   const handleBuyNow = () => {
@@ -277,7 +273,7 @@ export default function ProductDetail() {
               <span className="text-red-600 text-2xl">⚠️</span>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              {error || 'Không tìm thấy sản phẩm'}
+              Không tìm thấy sản phẩm
             </h2>
             <p className="text-gray-600 mb-6">Sản phẩm có thể đã bị xóa hoặc không tồn tại</p>
             <Button
@@ -321,7 +317,7 @@ export default function ProductDetail() {
                 <span>Yêu thích</span>
               </div>
               <div className="flex items-center space-x-1">
-                 <GitCompareArrows className="w-4 h-4 text-gray-400" />
+                <GitCompareArrows className="w-4 h-4 text-gray-400" />
                 <span>So sánh</span>
               </div>
               <div className="flex items-center space-x-1">
@@ -340,7 +336,7 @@ export default function ProductDetail() {
                 src={product.thumbnail}
                 alt={product.name}
                 className="w-full h-90 object-cover rounded-xl transition-transform group-hover:scale-105"
-              />  
+              />
             </Card>
 
             {/* Product Image Gallery */}
@@ -563,9 +559,9 @@ export default function ProductDetail() {
                     variant="outline"
                     className="h-16 border-red-400 text-red-600 hover:bg-red-50 hover:border-red-500 hover:ring-2 hover:ring-red-200 font-semibold py-3 rounded-xl transition-all duration-300"
                     onClick={handleAddToCart}
-                    disabled={isAddingToCart}
+                    disabled={addToCartMutation.isLoading}
                   >
-                    {isAddingToCart ? (
+                    {addToCartMutation.isLoading ? (
                       <>
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600 mr-1"></div>
                         Đang thêm...
