@@ -18,17 +18,22 @@ import {
   Truck,
   RotateCcw,
   Check,
-  GitCompareArrows
+  GitCompareArrows,
+  Send,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { cartService } from "@/services/cart.service";
 import { productService } from "@/services/product.service";
+import { productQuestionService } from "@/services/productQuestion.service";
 import { PUBLIC_PATH } from "@/constants/path";
 import type { Product } from "@/types/product.type";
 import { toast } from "sonner";
 import LoginModal from "@/components/user/LoginModal";
+import QuestionItem from "@/components/user/QuestionItem";
+import QuestionPagination from "@/components/user/QuestionPagination";
 import { useQuery } from "@/hooks/useQuery";
 import { useMutation } from "@/hooks/useMutation";
+
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -42,6 +47,10 @@ export default function ProductDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [questionContent, setQuestionContent] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allQuestions, setAllQuestions] = useState<any[]>([]);
+  const pageSize = 5;
 
   // Extract variants from API data dynamically
   const extractVariantsFromProduct = (product: Product) => {
@@ -88,6 +97,33 @@ export default function ProductDetail() {
   );
 
   const product = productData?.data || null;
+
+  // Load product questions
+  const { data: questionsData, isLoading: questionsLoading, refetch: refetchQuestions } = useQuery(
+    () => productQuestionService.getProductQuestionsBySlug(slug!, currentPage, pageSize),
+    {
+      queryKey: ['product-questions', slug || '', currentPage.toString()],
+      enabled: !!slug,
+      onError: (err) => {
+        console.error('Error loading product questions:', err);
+      }
+    }
+  );
+
+  const totalPages = questionsData?.data?.totalPage || 1;
+  const totalItems = questionsData?.data?.totalItem || 0;
+
+  // Cập nhật danh sách câu hỏi khi load thêm
+  useEffect(() => {
+    if (questionsData?.data?.data) {
+      const newQuestions = questionsData.data.data;
+      if (currentPage === 1) {
+        setAllQuestions(newQuestions);
+      } else {
+        setAllQuestions(prev => [...prev, ...newQuestions]);
+      }
+    }
+  }, [questionsData, currentPage]);
 
   useEffect(() => {
     if (product) {
@@ -164,6 +200,22 @@ export default function ProductDetail() {
     }
   );
 
+  const createQuestionMutation = useMutation(
+    (data: { content: string; productId: number }) => productQuestionService.createProductQuestion(data),
+    {
+      onSuccess: () => {
+        toast.success('Câu hỏi đã được gửi thành công!');
+        setQuestionContent("");
+        setAllQuestions([]); // Reset danh sách câu hỏi
+        setCurrentPage(1); // Reset về trang đầu khi thêm câu hỏi mới
+        refetchQuestions();
+      },
+      onError: () => {
+        toast.error('Không thể gửi câu hỏi');
+      }
+    }
+  );
+
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       setShowLoginModal(true);
@@ -207,6 +259,28 @@ export default function ProductDetail() {
 
     // Logic mua ngay - có thể lưu variant ID vào state hoặc localStorage
     navigate(`${PUBLIC_PATH.HOME}checkout`);
+  };
+
+  const handleSubmitQuestion = async () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!questionContent.trim()) {
+      toast.error('Vui lòng nhập câu hỏi');
+      return;
+    }
+
+    if (!product?.id) {
+      toast.error('Không tìm thấy thông tin sản phẩm');
+      return;
+    }
+
+    await createQuestionMutation.mutate({
+      content: questionContent.trim(),
+      productId: product.id
+    });
   };
 
   const scrollToTop = () => {
@@ -621,6 +695,109 @@ export default function ProductDetail() {
                   </div>
                 ))}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Product Questions Section */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              Hỏi và đáp
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Introduction Section with Mascot */}
+            <div className="mb-6 p-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-100">
+              <div className="flex items-start gap-4">
+                {/* Mascot Icon */}
+                <div className="flex-shrink-0">
+                  <img 
+                    src="/assets/bee.png" 
+                    alt="CellphoneS Mascot" 
+                    className="w-20 h-20 object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    Hãy đặt câu hỏi cho chúng tôi
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    CellphoneS sẽ phản hồi trong vòng 1 giờ. Nếu Quý khách gửi câu hỏi sau 22h, chúng tôi sẽ trả lời vào sáng hôm sau. 
+                    Thông tin có thể thay đổi theo thời gian, vui lòng đặt câu hỏi để nhận được cập nhật mới nhất!
+                  </p>
+                </div>
+              </div>
+              
+              {/* Question Input Form */}
+              <div className="mt-4 flex gap-3">
+                <textarea
+                  value={questionContent}
+                  onChange={(e) => setQuestionContent(e.target.value)}
+                  placeholder="Viết câu hỏi của bạn tại đây"
+                  className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm"
+                  rows={3}
+                />
+                <Button
+                  onClick={handleSubmitQuestion}
+                  disabled={createQuestionMutation.isLoading || !questionContent.trim()}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 h-auto self-end"
+                >
+                  {createQuestionMutation.isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Đang gửi...
+                    </>
+                  ) : (
+                    <>
+                      Gửi câu hỏi
+                      <Send className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Questions List */}
+            <div className="space-y-4">
+              {questionsLoading ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="p-4 border rounded-lg">
+                      <Skeleton className="h-4 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : allQuestions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Chưa có câu hỏi nào về sản phẩm này</p>
+                  <p className="text-sm">Hãy là người đầu tiên đặt câu hỏi!</p>
+                </div>
+              ) : (
+                <>
+                  {allQuestions.map((question) => (
+                    <QuestionItem key={question.id} question={question} />
+                  ))}
+                  
+                  {/* Load More Button */}
+                  <QuestionPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={totalItems}
+                    currentItems={allQuestions.length}
+                    onLoadMore={() => setCurrentPage(currentPage + 1)}
+                    isLoading={questionsLoading}
+                  />
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
