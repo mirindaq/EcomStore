@@ -15,6 +15,7 @@ import CustomerTable from "@/components/admin/customer/CustomerTable";
 import CustomerDialog from "@/components/admin/customer/CustomerDialog";
 import CustomerDetailDialog from "@/components/admin/customer/CustomerDetailDialog";
 import CustomerFilter from "@/components/admin/customer/CustomerFilter";
+import ExcelActions from "@/components/admin/common/ExcelActions";
 
 export default function Customers() {
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
@@ -42,11 +43,12 @@ export default function Customers() {
 
   // success callback chung
   const onSuccess = (message: string) => {
-    toast.success(message);
-    refetchCustomers();
-    setIsAddEditDialogOpen(false);
-    setEditingCustomer(null);
-  };
+        toast.success(message);
+        // ❌ LOẠI BỎ refetchCustomers() khỏi hàm chung này
+        // refetchCustomers(); 
+        setIsAddEditDialogOpen(false);
+        setEditingCustomer(null);
+      };
 
   // mutations
   const createCustomerMutation = useMutation(
@@ -72,18 +74,21 @@ export default function Customers() {
   });
 
   const toggleStatusMutation = useMutation((id: number) => customerService.changeStatusCustomer(id), {
-    onSuccess: () => {
-      toast.success("Thay đổi trạng thái thành công");
-      refetchCustomers();
-    },
-    onError: (error) => {
-      console.error("Error toggling customer status:", error);
-      toast.error("Không thể thay đổi trạng thái khách hàng");
-    },
-  });
+        onSuccess: () => {
+          toast.success("Thay đổi trạng thái thành công");
+          
+          // ✅ ĐẢM BẢO CHỈ GỌI HÀM refetch Ở ĐÂY (VÀ KHÔNG CÓ AWAIT/ASYNC)
+          refetchCustomers(); 
+        },
+        onError: (error) => {
+          console.error("Error toggling customer status:", error);
+          toast.error("Không thể thay đổi trạng thái khách hàng");
+        },
+      });
+  
 
   // form submit
-  const handleFormSubmit = (data: CreateCustomerRequest | UpdateCustomerProfileRequest) => {
+  const handleFormSubmit = async (data: CreateCustomerRequest | UpdateCustomerProfileRequest) => {
     if (editingCustomer) {
       updateCustomerMutation.mutate({ id: editingCustomer.id, data: data as UpdateCustomerProfileRequest });
     } else {
@@ -96,6 +101,12 @@ export default function Customers() {
     setCurrentPage(page);
   };
 
+  const handleFormFinished = () => {
+        toast.success(editingCustomer ? "Cập nhật thành công" : "Thêm khách hàng thành công");
+        refetchCustomers();
+        setIsAddEditDialogOpen(false);
+        setEditingCustomer(null);
+      };
   // toggle status
   const handleToggleStatus = (id: number) => {
     toggleStatusMutation.mutate(id);
@@ -116,15 +127,26 @@ export default function Customers() {
           <h1 className="text-2xl font-bold">Quản lý khách hàng</h1>
           <p className="text-lg text-gray-600">Quản lý và theo dõi thông tin khách hàng.</p>
         </div>
-        <Button
-          size="lg"
-          onClick={() => {
-            setEditingCustomer(null);
-            setIsAddEditDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Thêm khách hàng
-        </Button>
+        <div className="flex gap-2">
+          <ExcelActions
+            onDownloadTemplate={customerService.downloadTemplate}
+            onImport={customerService.importCustomers}
+            onExport={customerService.exportCustomers}
+            onImportSuccess={refetchCustomers}
+            templateFileName="customer_template.xlsx"
+            exportFileName="customers.xlsx"
+          />
+          <Button
+            size="lg"
+            onClick={() => {
+              setEditingCustomer(null);
+              setIsAddEditDialogOpen(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Thêm khách hàng
+          </Button>
+        </div>
       </div>
 
       {/* Filter */}
@@ -161,6 +183,7 @@ export default function Customers() {
         }}
         customer={editingCustomer}
         onSubmit={handleFormSubmit}
+        onFinished={handleFormFinished}
         isLoading={createCustomerMutation.isLoading || updateCustomerMutation.isLoading}
       />
      

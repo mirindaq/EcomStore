@@ -1,34 +1,24 @@
 // src/types/staff.type.ts
 
-// Generic wrapper (backend trả về { status, message, data })
 export interface ApiResponse<T> {
   status: number
   message: string
   data: T
 }
 
-// Role
 export interface UserRole {
   id: number
   name: string
 }
 
-// Bảng trung gian staff-userRole (như backend cung cấp)
-export interface StaffUserRole {
+export interface RoleResponse {
   id: number
-  role: UserRole
+  name: string
+  description?: string
 }
 
 // Work status
 export type WorkStatus = "ACTIVE" | "INACTIVE" | "PROBATION"
-
-function mapWorkStatusToApi(value: WorkStatus) {
-  switch (value) {
-    case "ACTIVE": return "ACTIVE" // hoặc "1"
-    case "INACTIVE": return "INACTIVE" // hoặc "0"
-    case "PROBATION": return "PROBATION"
-  }
-}
 
 // Staff entity (đồng bộ với backend DTO)
 export interface Staff {
@@ -42,7 +32,7 @@ export interface Staff {
   joinDate?: string
   active: boolean
   workStatus?: WorkStatus
-  userRole: StaffUserRole[]
+  role?: RoleResponse
   createdAt?: string
   modifiedAt?: string
 }
@@ -68,7 +58,7 @@ export interface CreateStaffRequest {
   joinDate?: string
   active: boolean
   workStatus?: WorkStatus
-  roleIds: number[] // backend nhận roleIds
+  roleId: number
 }
 
 export interface UpdateStaffRequest {
@@ -79,5 +69,5 @@ export interface UpdateStaffRequest {
   dateOfBirth?: string
   joinDate?: string
   workStatus?: WorkStatus
-  roleIds?: number[]
+  roleId?: number
 }

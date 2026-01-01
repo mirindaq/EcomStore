@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge } from "@/components/ui/CustomBadge";
 import { Edit, Power, PowerOff, Loader2, Search } from "lucide-react";
 import type { CustomerSummary } from "@/types/customer.type";
 
@@ -23,16 +23,7 @@ interface CustomerTableProps {
 }
 
 const formatPrice = (price: number) =>
-  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
-
-const formatDate = (dateString?: string) => {
-  if (!dateString) return "—";
-  return new Date(dateString).toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-};
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price || 0);
 
 export default function CustomerTable({
   customers,
@@ -43,6 +34,7 @@ export default function CustomerTable({
   currentPage = 1,
   pageSize = 7,
 }: CustomerTableProps) {
+
   return (
     <div className="space-y-4">
       <div className="text-sm text-gray-600">
@@ -58,18 +50,17 @@ export default function CustomerTable({
               <TableHead className="text-center font-semibold">STT</TableHead>
               <TableHead className="font-semibold">Khách hàng</TableHead>
               <TableHead className="font-semibold">Liên hệ</TableHead>
-              <TableHead className="font-semibold">Địa chỉ</TableHead>
-              <TableHead className="font-semibold">Tổng chi tiêu</TableHead>
-              <TableHead className="font-semibold">Trạng thái</TableHead>
-              <TableHead className="font-semibold">Ngày tham gia</TableHead>
-              <TableHead className="font-semibold">Thao tác</TableHead>
+              <TableHead className="font-semibold text-center">Tổng chi tiêu</TableHead>
+              <TableHead className="font-semibold text-center">Hạng</TableHead>
+              <TableHead className="font-semibold text-center">Trạng thái</TableHead>
+              <TableHead className="font-semibold text-center">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center">
+                <TableCell colSpan={7} className="py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                     <p className="text-gray-500 font-medium">
@@ -80,10 +71,7 @@ export default function CustomerTable({
               </TableRow>
             ) : customers.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="py-24 text-center text-gray-500"
-                >
+                <TableCell colSpan={7} className="py-24 text-center text-gray-500">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
                       <Search className="h-8 w-8 text-gray-400" />
@@ -101,42 +89,38 @@ export default function CustomerTable({
               </TableRow>
             ) : (
               customers.map((customer, index) => (
-                <TableRow
-                  key={customer.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
+                <TableRow key={customer.id} className="hover:bg-gray-50 transition-colors">
                   <TableCell className="text-center font-medium text-gray-600">
                     {(currentPage - 1) * pageSize + index + 1}
                   </TableCell>
+
                   <TableCell className="font-semibold text-gray-900">
                     {customer.fullName}
                   </TableCell>
+
                   <TableCell>
                     <div className="text-gray-600">{customer.email}</div>
                     <div className="text-sm text-gray-500">{customer.phone || "—"}</div>
                   </TableCell>
-                  <TableCell className="text-gray-600">
-                    {customer.address || "—"}
+
+                  <TableCell className="text-center text-gray-600">
+                    {formatPrice(customer.totalSpending)}
                   </TableCell>
-                  <TableCell className="text-gray-600">
-                    {formatPrice(customer.totalSpent)}
+
+                  <TableCell className="text-center text-gray-600">
+                    {customer.rankingName || "Chưa có"}
                   </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        customer.active
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : "bg-gray-100 text-gray-800 border-gray-200"
-                      }
+
+                  <TableCell className="text-center">
+                    <CustomBadge
+                      variant={customer.active ? "success" : "secondary"}
                     >
                       {customer.active ? "Hoạt động" : "Không hoạt động"}
-                    </Badge>
+                    </CustomBadge>
                   </TableCell>
-                  <TableCell className="text-gray-600">
-                    {formatDate(customer.registerDate)}
-                  </TableCell>
+
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 justify-center">
                       <Button
                         variant="outline"
                         size="sm"
@@ -146,6 +130,7 @@ export default function CustomerTable({
                       >
                         <Search className="h-4 w-4" />
                       </Button>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -155,6 +140,7 @@ export default function CustomerTable({
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -180,6 +166,7 @@ export default function CustomerTable({
           </TableBody>
         </Table>
       </div>
+
     </div>
   );
 }

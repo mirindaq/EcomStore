@@ -3,12 +3,17 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import type {
   Product,
+  ProductFilters,
   ProductListResponse,
 } from "@/types/product.type";
-import { ProductTable } from "@/components/admin/products";
+import type { BrandListResponse } from "@/types/brand.type";
+import type { CategoryListResponse } from "@/types/category.type";
+import { ProductTable, ProductDetailDialog } from "@/components/admin/products";
 import Pagination from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { productService } from "@/services/product.service";
+import { brandService } from "@/services/brand.service";
+import { categoryService } from "@/services/category.service";
 import { useQuery, useMutation } from "@/hooks";
 import { Plus } from "lucide-react";
 
@@ -16,26 +21,44 @@ export default function Products() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, _] = useState(7);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<ProductFilters>({});
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
   const {
     data: productsData,
     isLoading: isLoadingProducts,
     refetch: refetchProducts,
   } = useQuery<ProductListResponse>(
-    () => productService.getProducts(currentPage, pageSize, searchTerm),
+    () => productService.getProducts(currentPage, pageSize, filters),
     {
       queryKey: [
         "products",
         currentPage.toString(),
         pageSize.toString(),
-        searchTerm,
+        JSON.stringify(filters),
       ],
+    }
+  );
+
+  const { data: brandsData } = useQuery<BrandListResponse>(
+    () => brandService.getAllBrandsSimple(),
+    {
+      queryKey: ["brands-all"],
+    }
+  );
+
+  const { data: categoriesData } = useQuery<CategoryListResponse>(
+    () => categoryService.getAllCategoriesSimple(),
+    {
+      queryKey: ["categories-all"],
     }
   );
 
   const pagination = productsData?.data;
   const products = productsData?.data?.data || [];
+  const brands = brandsData?.data?.data || [];
+  const categories = categoriesData?.data?.data || [];
 
   const handleOpenAddDialog = () => {
     navigate("/admin/products/add");
@@ -46,18 +69,23 @@ export default function Products() {
     (id: number) => productService.changeStatusProduct(id),
     {
       onSuccess: () => {
-        toast.success('Thay đổi trạng thái thành công');
+        toast.success("Thay đổi trạng thái thành công");
         refetchProducts();
       },
       onError: (error) => {
-        console.error('Error toggling product status:', error);
-        toast.error('Không thể thay đổi trạng thái sản phẩm');
-      }
+        console.error("Error toggling product status:", error);
+        toast.error("Không thể thay đổi trạng thái sản phẩm");
+      },
     }
   );
 
   const handleOpenEditDialog = (product: Product) => {
     navigate(`/admin/products/edit/${product.id}`);
+  };
+
+  const handleViewDetail = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDetailDialogOpen(true);
   };
 
   const handleDelete = async (_id: number) => {
@@ -73,11 +101,10 @@ export default function Products() {
     setCurrentPage(page);
   };
 
-  const handleSearch = (searchTerm: string) => {
-    setSearchTerm(searchTerm);
-    setCurrentPage(1); // Reset to first page when searching
+  const handleFilterChange = (newFilters: ProductFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
   };
-
 
   return (
     <div className="space-y-3 p-2">
@@ -94,6 +121,7 @@ export default function Products() {
         <Button
           onClick={handleOpenAddDialog}
           size="lg"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="mr-2 h-4 w-4" />
           Thêm sản phẩm
@@ -105,10 +133,20 @@ export default function Products() {
         onEdit={handleOpenEditDialog}
         onDelete={handleDelete}
         onToggleStatus={handleToggleStatus}
+        onViewDetail={handleViewDetail}
         isLoading={isLoadingProducts}
-        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
         currentPage={currentPage}
         pageSize={pageSize}
+        brands={brands}
+        categories={categories}
+      />
+
+      {/* Product Detail Dialog */}
+      <ProductDetailDialog
+        open={isDetailDialogOpen}
+        onOpenChange={setIsDetailDialogOpen}
+        product={selectedProduct}
       />
 
       {/* Pagination */}
@@ -121,7 +159,6 @@ export default function Products() {
           />
         </div>
       )}
-
     </div>
   );
 }

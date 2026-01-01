@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { CustomBadge } from "@/components/ui/CustomBadge";
 import { Edit, Power, PowerOff, Loader2, Search } from "lucide-react";
 import type { Staff } from "@/types/staff.type";
 
@@ -24,7 +24,7 @@ interface StaffTableProps {
 export default function StaffTable({
   staffs,
   onEdit,
-  onDelete,
+  onDelete: _onDelete,
   onToggleStatus,
   isLoading = false,
   currentPage = 1,
@@ -68,7 +68,7 @@ export default function StaffTable({
               <TableRow>
                 <TableCell colSpan={9} className="py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-red-600" />
                     <p className="text-gray-500 font-medium">
                       Đang tải dữ liệu...
                     </p>
@@ -108,7 +108,11 @@ export default function StaffTable({
                   <TableCell>
                     <div className="w-12 h-12 rounded-full overflow-hidden border">
                       <img
-                        src={staff.avatar?.trim() ? staff.avatar : "/assets/avatar.jpg"}
+                        src={
+                          staff.avatar?.trim()
+                            ? staff.avatar
+                            : "/assets/avatar.jpg"
+                        }
                         alt={staff.fullName}
                         className="w-full h-full object-cover"
                       />
@@ -122,36 +126,25 @@ export default function StaffTable({
                     {staff.phone || "—"}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {staff.userRole?.length ? (
-                        staff.userRole.map((ur) => (
-                          <Badge
-                            key={ur.id}
-                            className="bg-purple-100 text-purple-800 border-purple-200"
-                          >
-                            {ur.role?.name}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-gray-400 text-sm">
-                          Chưa phân quyền
-                        </span>
-                      )}
-                    </div>
+                    {staff.role ? (
+                      <CustomBadge variant="info">
+                        {staff.role.name}
+                      </CustomBadge>
+                    ) : (
+                      <span className="text-gray-400 text-sm">
+                        Chưa phân quyền
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-gray-600">
                     {formatDate(staff.joinDate)}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      className={
-                        staff.active
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : "bg-gray-100 text-gray-800 border-gray-200"
-                      }
+                    <CustomBadge
+                      variant={staff.active ? "success" : "secondary"}
                     >
                       {staff.active ? "Hoạt động" : "Không hoạt động"}
-                    </Badge>
+                    </CustomBadge>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

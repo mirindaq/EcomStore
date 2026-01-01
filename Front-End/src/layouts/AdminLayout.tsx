@@ -1,6 +1,8 @@
-
-import { Link, Outlet, useLocation } from "react-router"
-import { useState } from "react"
+import { Link, Outlet, useLocation } from "react-router";
+import { useState } from "react";
+import { useUser } from "@/context/UserContext";
+import { AUTH_PATH } from "@/constants/path";
+import AuthStorageUtil from "@/utils/authStorage.util";
 import {
   Sidebar,
   SidebarContent,
@@ -13,9 +15,9 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarGroupContent
-} from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
+  SidebarGroupContent,
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import {
   Home,
   Package,
@@ -29,8 +31,17 @@ import {
   Tag,
   UserCheck,
   ChevronDown,
-  ChevronRight
-} from "lucide-react"
+  ChevronRight,
+  Newspaper,
+  LayoutList,
+  GitMerge,
+  Filter,
+  MessageSquare,
+  Star,
+  PackagePlus,
+  Truck,
+} from "lucide-react";
+import AdminChatListener from "@/components/admin/AdminChatListener";
 
 const navigation = [
   {
@@ -63,7 +74,17 @@ const navigation = [
         href: "/admin/brands",
         icon: Award,
       },
-    ]
+      {
+        title: "Liên kết danh mục",
+        href: "/admin/category-assignment",
+        icon: GitMerge,
+      },
+      {
+        title: "Tiêu chí lọc",
+        href: "/admin/filter-criterias",
+        icon: Filter,
+      },
+    ],
   },
   {
     title: "Quản lý đơn hàng",
@@ -74,8 +95,20 @@ const navigation = [
         title: "Đơn hàng",
         href: "/admin/orders",
         icon: ShoppingCart,
-      }
-    ]
+      },
+      {
+        title: "Nhập hàng",
+        href: "/admin/purchase-orders",
+        icon: PackagePlus,
+
+      },
+      {
+        title: "Giỏ hàng khách",
+        href: "/admin/carts",
+        icon: ShoppingCart,
+
+      },
+    ],
   },
   {
     title: "Quản lý khuyến mãi",
@@ -92,7 +125,12 @@ const navigation = [
         href: "/admin/vouchers",
         icon: ShoppingCart,
       },
-    ]
+      {
+        title: "Banner",
+        href: "/admin/banners",
+        icon: Award,
+      },
+    ],
   },
   {
     title: "Quản lý người dùng",
@@ -109,44 +147,108 @@ const navigation = [
         href: "/admin/staffs",
         icon: UserCheck,
       },
-    ]
+      {
+        title: "Nhà cung cấp",
+        icon: Truck,
+        href: "/admin/suppliers",
+      },
+      {
+        title: "Quản lý Chat",
+        href: "/admin/chats",
+        icon: MessageSquare,
+      },
+    ],
+  },
+  {
+    title: "Quản lý tin tức",
+    icon: Newspaper,
+    isSubmenu: true,
+    items: [
+      {
+        title: "Tin tức",
+        href: "/admin/articles",
+        icon: Newspaper,
+      },
+      {
+        title: "Danh mục",
+        href: "/admin/article-categories",
+        icon: LayoutList,
+      },
+    ],
+  },
+  {
+    title: "Quản lý đánh giá",
+    icon: Star,
+    href: "/admin/feedbacks",
+  },
+  {
+    title: "Quản lý Bình luận",
+    icon: MessageSquare,
+    href: "/admin/product-questions",
   },
   {
     title: "Báo cáo & Thống kê",
     icon: BarChart3,
-    href: "/admin/analytics",
+    isSubmenu: true,
+    items: [
+      {
+        title: "Thống kê Doanh thu",
+        href: "/admin/analytics",
+        icon: BarChart3,
+      },
+      {
+        title: "Thống kê Voucher",
+        href: "/admin/reports/voucher",
+        icon: Tag,
+      },
+      {
+        title: "Thống kê Promotion",
+        href: "/admin/reports/promotion",
+        icon: Award,
+      },
+    ],
   },
-]
+];
 
 export default function AdminLayout() {
-  const location = useLocation()
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
+  const location = useLocation();
+  const { logout } = useUser();
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
 
-  const handleLogout = () => {
-    // Xử lý đăng xuất ở đây
-    console.log("Đăng xuất")
-  }
+  const handleLogout = async () => {
+    try {
+      // Lấy login path trước khi logout (vì logout sẽ clear user data)
+      const loginPath = AuthStorageUtil.getLoginPath();
+      await logout();
+      // Dùng window.location.href để đảm bảo redirect ngay lập tức
+      window.location.href = loginPath;
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Fallback về admin login nếu có lỗi
+      window.location.href = AUTH_PATH.LOGIN_ADMIN;
+    }
+  };
 
   const toggleSubmenu = (menuTitle: string) => {
-    setExpandedMenus(prev => {
-      const newSet = new Set(prev)
+    setExpandedMenus((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(menuTitle)) {
-        newSet.delete(menuTitle)
+        newSet.delete(menuTitle);
       } else {
-        newSet.add(menuTitle)
+        newSet.add(menuTitle);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const isActiveRoute = (href: string) => {
-    if (href === "/admin") return location.pathname === "/admin"
-    return location.pathname.startsWith(href)
-  }
+    if (href === "/admin") return location.pathname === "/admin";
+    return location.pathname.startsWith(href);
+  };
 
   const isAnySubmenuItemActive = (items: any[]) => {
-    return items.some(item => isActiveRoute(item.href))
-  }
+    return items.some((item) => isActiveRoute(item.href));
+  };
 
   return (
     <SidebarProvider>
@@ -161,21 +263,29 @@ export default function AdminLayout() {
                 <Store className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-white">EcommerceWWW</span>
-                <span className="truncate text-xs text-gray-300">Admin Panel</span>
+                <span className="truncate font-semibold text-white">
+                  EcomStore
+                </span>
+                <span className="truncate text-xs text-gray-300">
+                  Admin Panel
+                </span>
               </div>
             </SidebarMenuButton>
           </SidebarHeader>
 
           <SidebarContent className="overflow-y-auto overflow-x-hidden bg-gray-900">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-gray-300 text-xs font-semibold uppercase tracking-wider">CHỨC NĂNG HỆ THỐNG</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-gray-300 text-xs font-semibold uppercase tracking-wider">
+                CHỨC NĂNG HỆ THỐNG
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1">
                   {navigation.map((item) => {
                     if (item.isSubmenu) {
-                      const isSubmenuActive = isAnySubmenuItemActive(item.items)
-                      const isExpanded = expandedMenus.has(item.title)
+                      const isSubmenuActive = isAnySubmenuItemActive(
+                        item.items
+                      );
+                      const isExpanded = expandedMenus.has(item.title);
 
                       return (
                         <div key={item.title}>
@@ -183,11 +293,14 @@ export default function AdminLayout() {
                             <SidebarMenuButton
                               tooltip={item.title}
                               isActive={isSubmenuActive}
-                              className={`h-12 px-4 py-3 text-white hover:bg-gray-800 ${isSubmenuActive ? "bg-gray-600" : ""}`}
+                              className={`h-12 px-4 py-3 text-white hover:bg-gray-800 ${isSubmenuActive ? "bg-gray-600" : ""
+                                }`}
                               onClick={() => toggleSubmenu(item.title)}
                             >
                               <item.icon className="shrink-0 h-5 w-5" />
-                              <span className="truncate flex-1">{item.title}</span>
+                              <span className="truncate flex-1">
+                                {item.title}
+                              </span>
                               {isExpanded ? (
                                 <ChevronDown className="h-4 w-4 shrink-0" />
                               ) : (
@@ -199,7 +312,7 @@ export default function AdminLayout() {
                           {isExpanded && (
                             <SidebarMenu className="ml-6 space-y-1">
                               {item.items.map((subItem) => {
-                                const isActive = isActiveRoute(subItem.href)
+                                const isActive = isActiveRoute(subItem.href);
 
                                 return (
                                   <SidebarMenuItem key={subItem.href}>
@@ -207,22 +320,27 @@ export default function AdminLayout() {
                                       asChild
                                       tooltip={subItem.title}
                                       isActive={isActive}
-                                      className={`h-10 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white ${isActive ? "bg-gray-600 text-white" : ""}`}
+                                      className={`h-10 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white ${isActive ? "bg-gray-600 text-white" : ""
+                                        }`}
                                     >
                                       <Link to={subItem.href}>
                                         <subItem.icon className="h-4 w-4 shrink-0" />
-                                        <span className="truncate">{subItem.title}</span>
+                                        <span className="truncate">
+                                          {subItem.title}
+                                        </span>
                                       </Link>
                                     </SidebarMenuButton>
                                   </SidebarMenuItem>
-                                )
+                                );
                               })}
                             </SidebarMenu>
                           )}
                         </div>
-                      )
+                      );
                     } else {
-                      const isActive = item.href ? isActiveRoute(item.href) : false
+                      const isActive = item.href
+                        ? isActiveRoute(item.href)
+                        : false;
 
                       return (
                         <SidebarMenuItem key={item.href || item.title}>
@@ -230,7 +348,8 @@ export default function AdminLayout() {
                             asChild
                             tooltip={item.title}
                             isActive={isActive}
-                            className={`h-12 px-4 py-3 text-white hover:bg-gray-800 ${isActive ? "bg-gray-600" : ""}`}
+                            className={`h-12 px-4 py-3 text-white hover:bg-gray-800 ${isActive ? "bg-gray-600" : ""
+                              }`}
                           >
                             <Link to={item.href || "/admin"}>
                               <item.icon className="shrink-0 h-5 w-5" />
@@ -238,7 +357,7 @@ export default function AdminLayout() {
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
-                      )
+                      );
                     }
                   })}
                 </SidebarMenu>
@@ -253,7 +372,8 @@ export default function AdminLayout() {
                   asChild
                   tooltip="Cài đặt"
                   isActive={location.pathname === "/admin/settings"}
-                  className={`h-12 px-4 py-3 text-white hover:bg-gray-800 ${location.pathname === "/admin/settings" ? "bg-gray-600" : ""}`}
+                  className={`h-12 px-4 py-3 text-white hover:bg-gray-800 ${location.pathname === "/admin/settings" ? "bg-gray-600" : ""
+                    }`}
                 >
                   <Link to="/admin/settings">
                     <Settings className="shrink-0 h-5 w-5" />
@@ -280,9 +400,7 @@ export default function AdminLayout() {
         <SidebarInset className="flex-1 w-full overflow-hidden">
           <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-14 items-center gap-4 px-6">
-              <div className="flex-1">
-
-              </div>
+              <div className="flex-1"></div>
             </div>
           </header>
 
@@ -291,6 +409,9 @@ export default function AdminLayout() {
           </main>
         </SidebarInset>
       </div>
+
+      {/* Auto-connect to WebSocket for admin */}
+      <AdminChatListener />
     </SidebarProvider>
-  )
+  );
 }

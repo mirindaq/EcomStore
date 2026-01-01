@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { rankingService } from '@/services/ranking.service';
+import { orderService } from '@/services/order.service';
 import type { Rank } from '@/types/ranking.type';
+import type { OrderListResponse } from '@/types/order.type';
 import {
   Heart,
   Lock,
@@ -9,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useQuery } from '@/hooks';
 
 export default function Membership() {
   const [rankings, setRankings] = useState<Rank[]>([]);
@@ -17,8 +20,27 @@ export default function Membership() {
   const [nextRank, setNextRank] = useState<Rank | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Mock data - sẽ được thay thế bằng data thực từ API
-  const totalSpent = 1828000;
+  // Lấy tổng tiền tích lũy từ đơn hàng COMPLETED
+  const { data: ordersData } = useQuery<OrderListResponse>(
+    () => orderService.getMyOrders(1, 1000),
+    {
+      queryKey: ["my-orders", "membership-stats"],
+    }
+  );
+
+  // Lấy rank hiện tại từ API
+  const { data: myRankData } = useQuery<{ status: number; message: string; data: Rank }>(
+    () => rankingService.getMyRank(),
+    {
+      queryKey: ["my-rank"],
+    }
+  );
+
+  // Tính tổng tiền tích lũy từ đơn hàng COMPLETED
+  const orders = ordersData?.data?.data || [];
+  const totalSpent = orders
+    .filter(order => order.status === "COMPLETED")
+    .reduce((sum, order) => sum + (order.finalTotalPrice || 0), 0);
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -29,14 +51,23 @@ export default function Membership() {
           const sortedRankings = [...response.data].sort((a: Rank, b: Rank) => a.minSpending - b.minSpending);
           setRankings(sortedRankings);
 
-          // Xác định hạng hiện tại và hạng tiếp theo
-          const current = sortedRankings.find(
-            (rank: Rank) => totalSpent >= rank.minSpending && totalSpent < rank.maxSpending
-          );
+          // Sử dụng rank từ API getMyRank nếu có, nếu không thì tính từ totalSpent
+          let current: Rank | undefined;
+          if (myRankData?.data) {
+            current = sortedRankings.find((r: Rank) => r.id === myRankData.data.id);
+          }
+          
+          if (!current) {
+            // Fallback: tính từ totalSpent
+            current = sortedRankings.find(
+              (rank: Rank) => totalSpent >= rank.minSpending && totalSpent < rank.maxSpending
+            );
+          }
+          
           setCurrentRank(current || sortedRankings[0]);
 
           if (current) {
-            const currentIndex = sortedRankings.findIndex((r: Rank) => r.id === current.id);
+            const currentIndex = sortedRankings.findIndex((r: Rank) => r.id === current!.id);
             if (currentIndex < sortedRankings.length - 1) {
               setNextRank(sortedRankings[currentIndex + 1]);
             }
@@ -50,7 +81,7 @@ export default function Membership() {
     };
 
     fetchRankings();
-  }, [totalSpent]);
+  }, [totalSpent, myRankData]);
 
   const getRankColor = (rankName: string) => {
     const colors: { [key: string]: { bg: string; text: string; border: string; badgeBg: string; badgeText: string } } = {
@@ -78,32 +109,29 @@ export default function Membership() {
   const canGoNext = currentSlide < rankings.length - 3;
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        {loading ? (
+    <div className="space-y-6">
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-4" />
+          <p className="text-gray-600">Đang tải thông tin hạng thành viên...</p>
+        </div>
+      ) : (
+        <>
+          {/* Empty State */}
           <div className="text-center py-12">
-            <Loader2 className="w-16 h-16 text-red-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Đang tải thông tin hạng thành viên...</p>
-          </div>
-        ) : (
-          <>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Ưu đãi của bạn</h3>
-
-            {/* Empty State */}
-            <div className="text-center py-12">
-              <div className="w-46 h-full mx-auto mb-5 flex items-center justify-center">
-                <img
-                  src={"/assets/empty.png"}
-                  alt={"empty"}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = "/assets/empty.png"
-                  }}
-                />
-              </div>
-              <p className="text-gray-600">Bạn đang chưa có ưu đãi nào</p>
+            <div className="w-46 h-full mx-auto mb-5 flex items-center justify-center">
+              <img
+                src={"/assets/empty.png"}
+                alt={"empty"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/assets/empty.png"
+                }}
+              />
             </div>
+            <p className="text-gray-600">Bạn đang chưa có ưu đãi nào</p>
+          </div>
 
             {/* Rank Cards Carousel */}
             <div className="mt-8 relative">
@@ -229,9 +257,8 @@ export default function Membership() {
                 </AlertDescription>
               </Alert>
             </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+        </>
+      )}
+    </div>
   );
 }

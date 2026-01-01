@@ -36,35 +36,43 @@ export default function AdminLogin() {
   })
 
   const adminLoginMutation = useMutation<AuthResponse>(authService.adminLogin, {
-    onSuccess: (data) => {
-      // Tạo user profile từ response
-      const userProfile: UserProfile = {
-        id: data.data.email, // Tạm thời dùng email làm ID
-        email: data.data.email,
-        name: data.data.email.split('@')[0], // Tạm thời dùng phần trước @ làm tên
-        roles: data.data.roles,
-      }
+    onSuccess: async (data) => {
+      try {
+        // 1. Lưu tokens trước
+        AuthStorageUtil.setTokens({
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken
+        });
 
-      AuthStorageUtil.setTokensAndData({
-        accessToken: data.data.accessToken,
-        refreshToken: data.data.refreshToken
-      }, userProfile)
+        // 2. Gọi API getProfile để lấy thông tin user đầy đủ
+        const profileResponse = await authService.getProfile();
+        
+        if (profileResponse.data.status === 200) {
+          const userProfile: UserProfile = profileResponse.data.data;
+          
+          // 3. Lưu user profile vào localStorage và context
+          login(userProfile);
 
-      login(userProfile)
+          toast.success('Đăng nhập admin thành công!');
 
-      toast.success('Đăng nhập admin thành công!')
-
-      if (data.data.roles.includes(ROLES.ADMIN)) {
-        navigate(ADMIN_PATH.DASHBOARD)
-      } else if (data.data.roles.includes(ROLES.STAFF)) {
-        navigate(STAFF_PATH.DASHBOARD)
-      } else if (data.data.roles.includes(ROLES.SHIPPER)) {
-        navigate(SHIPPER_PATH.DASHBOARD)
+          // 4. Điều hướng dựa trên role
+          if (userProfile.roles.includes(ROLES.ADMIN)) {
+            navigate(ADMIN_PATH.DASHBOARD);
+          } else if (userProfile.roles.includes(ROLES.STAFF)) {
+            navigate(STAFF_PATH.DASHBOARD);
+          } else if (userProfile.roles.includes(ROLES.SHIPPER)) {
+            navigate(SHIPPER_PATH.DASHBOARD);
+          }
+        }
+      } catch (error) {
+        console.error('Get profile error:', error);
+        toast.error('Không thể lấy thông tin người dùng');
+        AuthStorageUtil.clearAll();
       }
     },
     onError: (error) => {
-      console.error('Admin login error:', error)
-      toast.error('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
+      console.error('Admin login error:', error);
+      toast.error('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     }
   })
 
@@ -82,7 +90,7 @@ export default function AdminLogin() {
       <div className="hidden lg:flex lg:w-3/5 bg-linear-to-br from-blue-800 to-indigo-800 p-12 flex-col justify-center">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-4">
-            Hệ thống quản trị <span className="text-yellow-300">Ecommerce Store</span>
+            Hệ thống quản trị <span className="text-yellow-300">EcomStore</span>
           </h1>
           <p className="text-lg text-blue-100">
             Quản lý toàn bộ hoạt động kinh doanh và vận hành cửa hàng
@@ -243,10 +251,10 @@ export default function AdminLogin() {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
-              Hệ thống quản trị Ecommerce Store
+              Hệ thống quản trị EcomStore
             </p>
             <p className="text-center text-xs text-gray-500 mt-1">
-              © 2024 Ecommerce Store. All rights reserved.
+              © 2024 EcomStore. All rights reserved.
             </p>
           </div>
         </div>

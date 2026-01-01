@@ -48,12 +48,12 @@ export default function UserRegister() {
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         const { data } = event.data
         if (data) {
-          const { accessToken, refreshToken, email, roles } = data
+          const { accessToken, refreshToken, email, roles, fullName } = data
 
           const userProfile: UserProfile = {
             id: email,
             email: email,
-            name: email.split('@')[0],
+            fullName: fullName,
             roles: roles,
           }
 
@@ -144,7 +144,7 @@ export default function UserRegister() {
               Đăng ký trở thành <span className="text-red-600">SMEMBER</span>
             </h1>
             <p className="text-lg text-gray-700">
-              Để không bỏ lỡ các ưu đãi hấp dẫn từ Ecommerce Store
+              Để không bỏ lỡ các ưu đãi hấp dẫn từ EcomStore
             </p>
           </div>
 
@@ -173,23 +173,15 @@ export default function UserRegister() {
               <h3 className="text-center text-gray-700 font-medium">
                 Đăng ký bằng tài khoản mạng xã hội
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex justify-center">
                 <Button
                   variant="outline"
                   type="button"
-                  className="h-12 border-gray-300 hover:bg-gray-50"
+                  className="h-12 border-gray-300 hover:bg-gray-50 w-full max-w-xs"
                   onClick={handleGoogleRegister}
                 >
                   <FcGoogle className="mr-2 h-4 w-4" />
                   Google
-                </Button>
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="h-12 border-gray-300 hover:bg-gray-50"
-                >
-                  <div className="w-4 h-4 bg-blue-500 rounded mr-2" />
-                  Zalo
                 </Button>
               </div>
             </div>
@@ -389,7 +381,7 @@ export default function UserRegister() {
             <p className="text-center text-sm text-gray-600">
               Mua sắm, sửa chữa tại{' '}
               <a href="#" className="text-red-600 hover:text-red-700">
-                ecommerce.com.vn
+                ecomstore.com.vn
               </a>
             </p>
           </div>

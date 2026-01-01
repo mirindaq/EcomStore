@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { cartService } from '@/services/cart.service'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
+import { CustomBadge } from '@/components/ui/CustomBadge'
 import { 
   Trash2, 
   Plus, 
@@ -221,7 +221,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-8 max-w-8xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Giỏ hàng của bạn</h1>
         <p className="text-gray-600">{cart.data.items.length} sản phẩm trong giỏ hàng</p>
@@ -290,9 +290,9 @@ export default function Cart() {
                 
                 <div className="flex items-center space-x-2 mb-3">
                   {item.discount > 0 && (
-                    <Badge variant="destructive" className="text-xs animate-pulse">
+                    <CustomBadge variant="error" size="sm" className="animate-pulse">
                       -{item.discount}%
-                    </Badge>
+                    </CustomBadge>
                   )}
                 </div>
 

@@ -1,4 +1,3 @@
-import type { Category } from "./category.type";
 import type { ResponseApi, ResponseApiWithPagination } from "./responseApi.type";
 
 export type VariantValue = {
@@ -6,6 +5,7 @@ export type VariantValue = {
   value: string;
   variantId: number;
   variantName?: string;
+  slug: string;
   status: boolean;
 };
 
@@ -13,8 +13,9 @@ export type Variant = {
   id: number;
   name: string;
   status: boolean;
-  category: Category;
+  slug: string;
   variantValues: VariantValue[];
+  createdAt?: string;
 };
 
 export type CreateVariantValueRequest = {
@@ -24,9 +25,25 @@ export type CreateVariantValueRequest = {
 export type CreateVariantRequest = {
   name: string;
   status?: boolean;
-  categoryId?: number;
   variantValues?: CreateVariantValueRequest[];
 };
+
+// VariantCategory types - Đồng bộ với BE VariantCategoryResponse
+export type VariantCategory = {
+  id: number;
+  variantId: number;
+  variantName: string;
+  categoryId: number;
+  categoryName: string;
+};
+
+export type CreateVariantCategoryRequest = {
+  variantId: number;
+  categoryId: number;
+};
+
+export type VariantCategoryResponse = ResponseApi<VariantCategory>;
+export type VariantCategoryListResponse = ResponseApi<VariantCategory[]>;
 
 export type VariantResponse = ResponseApi<Variant>;
 

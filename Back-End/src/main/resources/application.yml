@@ -17,6 +17,11 @@ spring:
         dialect: ${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT}
         enable_lazy_load_no_trans: ${SPRING_JPA_PROPERTIES_HIBERNATE_ENABLE_LAZY_LOAD_NO_TRANS}
 
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    connection-timeout: 5s
+    socket-timeout: 60s
+
   mail:
     host: ${SPRING_MAIL_HOST}
     username: ${SPRING_MAIL_USERNAME}
@@ -37,7 +42,11 @@ spring:
     jwtRefreshSecret: ${SPRING_APP_JWT_REFRESH_SECRET}
     jwtAccessExpirationMs: ${SPRING_APP_JWT_ACCESS_EXPIRATION_MS}
     jwtRefreshExpirationMs: ${SPRING_APP_JWT_REFRESH_EXPIRATION_MS}
-
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
   security:
     oauth2:
       client:
@@ -52,7 +61,59 @@ spring:
             token-uri: ${GOOGLE_TOKEN_URI}
             user-info-uri: ${GOOGLE_USER_INFO_URI}
 
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_KEY}
+        chat:
+          options:
+            model: gemini-2.5-flash
+        embedding:
+          text:
+            options:
+              model: text-embedding-004
+          api-key: ${GEMINI_KEY}
+    vectorstore:
+      qdrant:
+        host: ${QDRANT_HOST:localhost}
+        port: 6334
+        collection-name: ecomstore
+        use-tls: false
+        initialize-schema: true
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+        shutdown-timeout: 200ms
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+payment:
+  vnPay:
+    url: ${PAYMENT_URL}
+    tmnCode: ${PAYMENT_TMN_CODE}
+    secretKey: ${PAYMENT_SECRET_KEY}
+    returnUrl: ${PAYMENT_RETURN_URL}
+    version: 2.1.0
+    command: pay
+    orderType: other
+  pay_os:
+    client-id: ${PAY_OS_CLIENT_ID}
+    api-key: ${PAY_OS_API_KEY}
+    checksum-key: ${PAY_OS_CHECKSUM_KEY}
+    return-url: ${PAY_OS_RETURN_URL}
+    cancel-url: ${PAY_OS_CANCEL_URL}
 
 cloudinary:
   url: ${CLOUDINARY_URL}
@@ -62,3 +123,31 @@ api:
 
 app:
   upload-dir: uploads
+
+domain:
+  frontend: ${DOMAIN_FRONTEND}
+  frontend-staff: ${DOMAIN_FRONTEND_STAFF}
+
+minio:
+  url: ${MINIO_URL}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  bucket-name: ${MINIO_BUCKET_NAME}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
