@@ -6,6 +6,7 @@ import iuh.fit.ecommerce.dtos.response.voucher.RankVoucherResponse;
 import iuh.fit.ecommerce.entities.Customer;
 import iuh.fit.ecommerce.entities.Order;
 import iuh.fit.ecommerce.entities.Ranking;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.RankingMapper;
 import iuh.fit.ecommerce.repositories.CustomerRepository;
@@ -34,7 +35,7 @@ public class RankingServiceImpl implements RankingService {
     @Override
     public Ranking getRankingEntityById(Long id) {
         return rankingRepository.findById(id)
-                .orElseThrow(()-> new ResourceNotFoundException("Ranking not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RANKING_NOT_FOUND));
     }
 
     @Override
@@ -49,7 +50,7 @@ public class RankingServiceImpl implements RankingService {
     @Override
     public Ranking getRankingForSpending(Double spending) {
         return rankingRepository.findRankingBySpending(spending)
-                .orElseThrow(() -> new RuntimeException("No ranking found for spending: " + spending));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RANKING_NOT_FOUND));
     }
 
     @Override

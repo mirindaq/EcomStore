@@ -16,6 +16,7 @@ import iuh.fit.ecommerce.dtos.request.brand.BrandAddRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.brand.BrandResponse;
 import iuh.fit.ecommerce.entities.Brand;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.BrandMapper;
@@ -83,16 +84,16 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public Brand getBrandEntityById(Long id) {
         return brandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND));
     }
 
     private void validateBrandName(String name, Brand existingBrand) {
         if (existingBrand == null && brandRepository.existsByName(name)) {
-            throw new ConflictException("Brand name already exists");
+            throw new ConflictException(ErrorCode.BRAND_NAME_EXISTS);
         }
         if (existingBrand != null && !name.equals(existingBrand.getName()) &&
                 brandRepository.existsByName(name)) {
-            throw new ConflictException("Brand name already exists");
+            throw new ConflictException(ErrorCode.BRAND_NAME_EXISTS);
         }
     }
 

@@ -3,6 +3,7 @@ package iuh.fit.ecommerce.services.impl;
 import iuh.fit.ecommerce.entities.Cart;
 import iuh.fit.ecommerce.entities.Order;
 import iuh.fit.ecommerce.entities.Voucher;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.repositories.*;
 import iuh.fit.ecommerce.services.EmailService;
@@ -127,7 +128,7 @@ public class PaymentServiceImpl implements PaymentService {
         String platform = request.getParameter("platform");
         boolean isStaffOrder = "true".equals(request.getParameter("isStaffOrder"));
 
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
         String redirectUrl;
         if ("mobile".equals(platform)) {
@@ -182,7 +183,7 @@ public class PaymentServiceImpl implements PaymentService {
             order.setStatus(PAYMENT_FAILED);
             restoreVariantStock(order);
             if (voucherId != 0) {
-                Voucher voucher = voucherRepository.findById(voucherId).orElseThrow(() -> new ResourceNotFoundException("Voucher not found with id: " + voucherId));
+                Voucher voucher = voucherRepository.findById(voucherId).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VOUCHER_NOT_FOUND));
                 voucherUsageHistoryRepository.deleteByVoucherAndOrder(voucher, order);
             }
         }
@@ -239,7 +240,7 @@ public class PaymentServiceImpl implements PaymentService {
         String platform = request.getParameter("platform");
         
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ORDER_NOT_FOUND));
         
         try {
             PaymentLink paymentInfo = payOS.paymentRequests().get(Long.parseLong(orderCode));
@@ -307,7 +308,7 @@ public class PaymentServiceImpl implements PaymentService {
         String platform = request.getParameter("platform");
         
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ORDER_NOT_FOUND));
         
         handlePaymentFailure(order, voucherId);
         
@@ -320,7 +321,7 @@ public class PaymentServiceImpl implements PaymentService {
         restoreVariantStock(order);
         if (voucherId != 0) {
             Voucher voucher = voucherRepository.findById(voucherId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Voucher not found with id: " + voucherId));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VOUCHER_NOT_FOUND));
             voucherUsageHistoryRepository.deleteByVoucherAndOrder(voucher, order);
         }
         orderRepository.save(order);
@@ -395,7 +396,7 @@ public class PaymentServiceImpl implements PaymentService {
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
-                throw new NullPointerException();
+                throw new IllegalArgumentException(ErrorCode.INVALID_PARAMETER.getMessage());
             }
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
             byte[] hmacKeyBytes = key.getBytes();

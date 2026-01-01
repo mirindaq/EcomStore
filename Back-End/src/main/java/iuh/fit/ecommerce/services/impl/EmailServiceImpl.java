@@ -4,6 +4,7 @@ package iuh.fit.ecommerce.services.impl;
 import iuh.fit.ecommerce.entities.Cart;
 import iuh.fit.ecommerce.entities.Order;
 import iuh.fit.ecommerce.entities.Voucher;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.services.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -50,12 +51,12 @@ public class EmailServiceImpl implements EmailService {
         } catch (MessagingException exception) {
 
             if (exception.getMessage().contains("Recipient address rejected")) {
-                throw new RuntimeException("Địa chỉ email không tồn tại");
+                throw new RuntimeException(ErrorCode.EMAIL_ADDRESS_NOT_FOUND.getMessage());
             } else {
-                throw new RuntimeException("Không thể gửi email OTP: " + exception.getMessage());
+                throw new RuntimeException(ErrorCode.EMAIL_SEND_FAILED.getMessage(), exception);
             }
         } catch (Exception exception) {
-            throw new RuntimeException("Có lỗi xảy ra khi gửi email OTP: " + exception.getMessage());
+            throw new RuntimeException(ErrorCode.EMAIL_SEND_FAILED.getMessage(), exception);
         }
     }
 
@@ -83,9 +84,9 @@ public class EmailServiceImpl implements EmailService {
         } catch (MessagingException exception) {
             log.error("Failed to send order confirmation email to {}: {}", to, exception.getMessage());
             if (exception.getMessage().contains("Recipient address rejected")) {
-                throw new RuntimeException("Địa chỉ email không tồn tại");
+                throw new RuntimeException(ErrorCode.EMAIL_ADDRESS_NOT_FOUND.getMessage());
             } else {
-                throw new RuntimeException("Không thể gửi email xác nhận đơn hàng: " + exception.getMessage());
+                throw new RuntimeException(ErrorCode.EMAIL_SEND_FAILED.getMessage(), exception);
             }
         } catch (Exception exception) {
             log.error("Error sending order confirmation email to {}: {}", to, exception.getMessage());

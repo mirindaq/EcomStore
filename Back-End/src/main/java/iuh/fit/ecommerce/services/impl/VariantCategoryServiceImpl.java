@@ -5,6 +5,7 @@ import iuh.fit.ecommerce.dtos.response.variantCategory.VariantCategoryResponse;
 import iuh.fit.ecommerce.entities.Category;
 import iuh.fit.ecommerce.entities.Variant;
 import iuh.fit.ecommerce.entities.VariantCategory;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.VariantCategoryMapper;
 import iuh.fit.ecommerce.repositories.CategoryRepository;
@@ -56,7 +57,7 @@ public class VariantCategoryServiceImpl implements VariantCategoryService {
     @Override
     public List<VariantCategoryResponse> getVariantCategoriesByCategoryId(Long categoryId) {
         if (!categoryRepository.existsById(categoryId)) {
-            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND);
         }
 
         List<VariantCategory> variantCategories = variantCategoryRepository.findVariantCategoriesByCategoryId(categoryId);

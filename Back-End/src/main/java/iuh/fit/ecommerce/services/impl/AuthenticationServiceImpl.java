@@ -14,6 +14,7 @@ import iuh.fit.ecommerce.dtos.response.authentication.RefreshTokenResponse;
 import iuh.fit.ecommerce.dtos.response.user.UserProfileResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.enums.TokenType;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.exceptions.custom.UnauthorizedException;
@@ -106,15 +107,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public void register(RegisterRequest registerRequest) {
         if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
-            throw new BadCredentialsException("Password and confirm password do not match");
+            throw new BadCredentialsException(ErrorCode.PASSWORD_MISMATCH.getMessage());
         }
 
         if (customerRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new ConflictException("Email already registered: " + registerRequest.getEmail());
+            throw new ConflictException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
 
         if (customerRepository.existsByPhone(registerRequest.getPhone())) {
-            throw new ConflictException("Phone already registered: " + registerRequest.getPhone());
+            throw new ConflictException(ErrorCode.PHONE_ALREADY_REGISTERED);
         }
 
         Customer customer = Customer.builder()
@@ -138,34 +139,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String refreshToken = getRefreshTokenFromCookie(request);
 
         if (refreshToken == null) {
-           throw new BadCredentialsException("Refresh token not found in cookies");
+           throw new BadCredentialsException(ErrorCode.REFRESH_TOKEN_NOT_FOUND_IN_COOKIES.getMessage());
         }
 
         if (!jwtUtil.validateJwtToken(refreshToken, TokenType.REFRESH_TOKEN)) {
-            throw new JwtException("Invalid or expired refresh token");
+            throw new JwtException(ErrorCode.REFRESH_TOKEN_INVALID.getMessage());
         }
         String email = jwtUtil.getUserNameFromJwtToken(refreshToken, TokenType.REFRESH_TOKEN);
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
 
         RefreshToken dbToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
         if (!dbToken.getUser().getId().equals(user.getId())) {
-            throw new BadCredentialsException("Refresh token does not belong to user");
+            throw new BadCredentialsException(ErrorCode.REFRESH_TOKEN_NOT_BELONGS_TO_USER.getMessage());
         }
 
         if (dbToken.getRevoked()) {
-            throw new UnauthorizedException("Refresh token revoked");
+            throw new UnauthorizedException(ErrorCode.REFRESH_TOKEN_REVOKED);
         }
 
         if (dbToken.getExpiryDate().isBefore(LocalDate.now())) {
-            throw new JwtException("Refresh token expired");
+            throw new JwtException(ErrorCode.REFRESH_TOKEN_EXPIRED.getMessage());
         }
 
         if (!user.getActive()) {
-            throw new UnauthorizedException("User is disabled");
+            throw new UnauthorizedException(ErrorCode.USER_DISABLED);
         }
 
         String accessToken = jwtUtil.generateAccessToken(user);
@@ -195,7 +196,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         refreshTokenRepository.findByToken(refreshToken)
                 .ifPresent(token -> {
                     if (!token.getUser().getId().equals(currentUser.getId())) {
-                        throw new AccessDeniedException("Token does not belong to current user");
+                        throw new AccessDeniedException(ErrorCode.TOKEN_NOT_BELONGS_TO_USER.getMessage());
                     }
                     token.setRevoked(true);
                     refreshTokenRepository.save(token);
@@ -240,7 +241,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .build()
                     .toUriString();
         }
-        throw new IllegalArgumentException("Unsupported login type: " + loginType);
+        throw new IllegalArgumentException(ErrorCode.UNSUPPORTED_LOGIN_TYPE.getMessage());
     }
 
     @Override
@@ -260,7 +261,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     code,
                     finalRedirectUri).execute().getAccessToken();
         } else {
-            throw new IllegalArgumentException("Unsupported login type: " + loginType);
+            throw new IllegalArgumentException(ErrorCode.UNSUPPORTED_LOGIN_TYPE.getMessage());
         }
 
         RestTemplate restTemplate = new RestTemplate();
@@ -291,7 +292,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         if (!customer.getActive()) {
-            throw new UnauthorizedException("User is disabled");
+            throw new UnauthorizedException(ErrorCode.USER_DISABLED);
         }
 
         return loginSocial(customer);
@@ -304,14 +305,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Function<T, T> saveUser) {
 
         T user = findByEmail.apply(loginRequest.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + loginRequest.getEmail()));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND_BY_EMAIL));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid password");
+            throw new BadCredentialsException(ErrorCode.INVALID_PASSWORD.getMessage());
         }
 
         if (!user.getActive()) {
-            throw new DisabledException("User is disabled");
+            throw new DisabledException(ErrorCode.USER_DISABLED.getMessage());
         }
 
         String token = jwtUtil.generateAccessToken(user);
@@ -373,7 +374,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void addRoleCustomer(Customer customer) {
         Role role = roleRepository.findByName("CUSTOMER")
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found: CUSTOMER"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
 
         UserRole userRole = new UserRole();
         userRole.setUser(customer);

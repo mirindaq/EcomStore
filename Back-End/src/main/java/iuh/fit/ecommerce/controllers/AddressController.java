@@ -40,10 +40,6 @@ public class AddressController {
 
     @PostMapping("")
     public ResponseEntity<ResponseSuccess<AddressResponse>> addAddress(@Valid @RequestBody AddressRequest request) {
-
-        System.out.println("==== Received AddressRequest ====");
-        System.out.println(request);
-
         Customer currentCustomer = securityUtils.getCurrentCustomer();
         AddressResponse response = addressService.addAddress(currentCustomer.getId(), request);
         return ResponseEntity.status(CREATED).body(new ResponseSuccess<>(CREATED, "Add address success", response));

@@ -15,6 +15,8 @@ import iuh.fit.ecommerce.dtos.request.article.ArticleCategoryAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleCategoryResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.entities.ArticleCategory;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ArticleCategoryMapper;
 import iuh.fit.ecommerce.repositories.ArticleCategoryRepository;
@@ -33,7 +35,7 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
     public ArticleCategoryResponse createCategory(ArticleCategoryAddRequest request) {
         // Check if title already exists
         if (articleCategoryRepository.existsByTitle(request.getTitle())) {
-            throw new RuntimeException("Article Category with title '" + request.getTitle() + "' already exists");
+            throw new ConflictException(ErrorCode.ARTICLE_CATEGORY_TITLE_EXISTS);
         }
 
         // Generate slug from title
@@ -41,7 +43,7 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
 
         // Check if slug already exists
         if (articleCategoryRepository.findBySlug(slug).isPresent()) {
-            throw new RuntimeException("Article Category with slug '" + slug + "' already exists");
+            throw new ConflictException(ErrorCode.ARTICLE_CATEGORY_SLUG_EXISTS);
         }
 
         ArticleCategory category = articleCategoryMapper.toEntity(request);
@@ -56,7 +58,7 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
     @Transactional(readOnly = true)
     public ArticleCategoryResponse getCategoryBySlug(String slug) {
         ArticleCategory category = articleCategoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Article Category not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_CATEGORY_SLUG_NOT_FOUND));
         return articleCategoryMapper.toResponse(category);
     }
 
@@ -64,7 +66,7 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
     @Transactional(readOnly = true)
     public ArticleCategoryResponse getCategoryById(Long id) {
         ArticleCategory category = articleCategoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Article Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_CATEGORY_NOT_FOUND));
         return articleCategoryMapper.toResponse(category);
     }
 
@@ -72,12 +74,12 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
     @Transactional
     public ArticleCategoryResponse updateCategory(Long id, ArticleCategoryAddRequest request) {
         ArticleCategory category = articleCategoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Article Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_CATEGORY_NOT_FOUND));
 
         // Check if new title exists (but not for this category)
         if (!category.getTitle().equals(request.getTitle()) &&
                 articleCategoryRepository.existsByTitle(request.getTitle())) {
-            throw new RuntimeException("Article Category with title '" + request.getTitle() + "' already exists");
+            throw new ConflictException(ErrorCode.ARTICLE_CATEGORY_TITLE_EXISTS);
         }
 
         category.setTitle(request.getTitle());
@@ -91,7 +93,7 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
     @Transactional
     public void deleteCategory(Long id) {
         ArticleCategory category = articleCategoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Article Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_CATEGORY_NOT_FOUND));
 
         articleCategoryRepository.delete(category);
     }

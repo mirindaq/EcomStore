@@ -9,6 +9,8 @@ import iuh.fit.ecommerce.dtos.response.address.AddressResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.customer.CustomerResponse;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.services.CustomerService;
 import iuh.fit.ecommerce.services.excel.CustomerExcelService;
 import jakarta.validation.Valid;
@@ -39,7 +41,7 @@ public class CustomerController {
     @PostMapping(value = "")
     public ResponseEntity<ResponseSuccess<CustomerResponse>> createUser(
             @Valid @RequestBody CustomerAddRequest customerAddRequest) {
-        return ResponseEntity.ok(new ResponseSuccess<>(
+        return ResponseEntity.status(CREATED).body(new ResponseSuccess<>(
                 CREATED,
                 "Create Customer success",
                 customerService.createCustomer(customerAddRequest)));
@@ -127,7 +129,7 @@ public class CustomerController {
                     .contentLength(bytes.length)
                     .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate template: " + e.getMessage());
+            throw new RuntimeException(ErrorCode.EXCEL_TEMPLATE_GENERATION_FAILED.getMessage(), e);
         }
     }
 
@@ -137,7 +139,7 @@ public class CustomerController {
             @RequestParam("file") MultipartFile file) {
         try {
             if (file == null || file.isEmpty()) {
-                throw new RuntimeException("File is null or empty! Please select a valid Excel file.");
+                throw new InvalidParamException(ErrorCode.EXCEL_FILE_EMPTY);
             }
             
             System.out.println("Received file: " + file.getOriginalFilename() + ", Size: " + file.getSize());
@@ -150,7 +152,7 @@ public class CustomerController {
                     result));
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Import failed: " + e.getMessage(), e);
+            throw new RuntimeException(ErrorCode.EXCEL_IMPORT_FAILED.getMessage(), e);
         }
     }
 
@@ -172,7 +174,7 @@ public class CustomerController {
                     .contentLength(bytes.length)
                     .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to export customers: " + e.getMessage());
+            throw new RuntimeException(ErrorCode.EXCEL_EXPORT_FAILED.getMessage(), e);
         }
     }
 
@@ -181,7 +183,7 @@ public class CustomerController {
     public ResponseEntity<ResponseSuccess<AddressResponse>> addAddressForCustomer(
             @PathVariable Long customerId,
             @Valid @RequestBody AddressRequest request) {
-        return ResponseEntity.ok(new ResponseSuccess<>(
+        return ResponseEntity.status(CREATED).body(new ResponseSuccess<>(
                 CREATED,
                 "Add address for customer success",
                 customerService.addAddressForCustomer(customerId, request)));

@@ -10,6 +10,7 @@ import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantPromotionResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantResponse;
 import iuh.fit.ecommerce.entities.*;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
@@ -57,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void createProduct(ProductAddRequest productAddRequest) {
         if(productRepository.existsByName(productAddRequest.getName())){
-            throw new ConflictException("Product name already exists with name: " + productAddRequest.getName());
+            throw new ConflictException(ErrorCode.PRODUCT_NAME_EXISTS);
         }
         Brand brand = brandService.getBrandEntityById(productAddRequest.getBrandId());
         Category category = categoryService.getCategoryEntityById(productAddRequest.getCategoryId());
@@ -74,7 +75,7 @@ public class ProductServiceImpl implements ProductService {
         
         // Reload product with all relationships before indexing
         Product savedProduct = productRepository.findById(product.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found after creation"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         
         // Index product to Elasticsearch
         productSearchService.indexProduct(savedProduct);
@@ -122,7 +123,7 @@ public class ProductServiceImpl implements ProductService {
         // Check if name changed and new name already exists
         if (!product.getName().equals(request.getName()) && 
             productRepository.existsByName(request.getName())) {
-            throw new ConflictException("Product name already exists with name: " + request.getName());
+            throw new ConflictException(ErrorCode.PRODUCT_NAME_EXISTS);
         }
         
         // Xóa thumbnail cũ trên MinIO nếu có thay đổi
@@ -167,7 +168,7 @@ public class ProductServiceImpl implements ProductService {
         
         // Re-index to Elasticsearch
         Product savedProduct = productRepository.findById(product.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found after update"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         productSearchService.indexProduct(savedProduct);
         
         return productMapper.toResponse(savedProduct);
@@ -319,13 +320,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product getProductEntityById(Long id){
         return productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Override
     public Product getProductEntityBySlug(String slug) {
         return productRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_SLUG_NOT_FOUND));
     }
 
     @Override

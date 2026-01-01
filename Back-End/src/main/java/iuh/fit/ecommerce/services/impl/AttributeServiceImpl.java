@@ -2,6 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.response.attribute.AttributeResponse;
 import iuh.fit.ecommerce.entities.Attribute;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.AttributeMapper;
 import iuh.fit.ecommerce.repositories.AttributeRepository;
@@ -30,6 +31,6 @@ public class AttributeServiceImpl implements AttributeService {
     @Override
     public Attribute getAttributeEntityById(Long id) {
         return attributeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Attribute not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ATTRIBUTE_NOT_FOUND));
     }
 }

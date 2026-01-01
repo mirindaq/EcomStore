@@ -2,6 +2,7 @@ package iuh.fit.ecommerce.exceptions.custom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.ecommerce.dtos.response.base.ResponseError;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
@@ -19,12 +20,13 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
 
+        ErrorCode errorCode = ErrorCode.TOKEN_MISSING;
         ResponseError error = ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpServletResponse.SC_UNAUTHORIZED)
-                .error("Unauthorized")
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getRequestURI())
-                .message("Missing or invalid token")
+                .message(errorCode.getMessage())
                 .build();
 
         response.setContentType("application/json");

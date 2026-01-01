@@ -6,6 +6,8 @@ import iuh.fit.ecommerce.entities.Customer;
 import iuh.fit.ecommerce.entities.Product;
 import iuh.fit.ecommerce.entities.User;
 import iuh.fit.ecommerce.entities.WishList;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.WishListMapper;
 import iuh.fit.ecommerce.repositories.ProductRepository;
@@ -32,14 +34,14 @@ public class WishListServiceImpl implements WishListService {
     private Customer getCurrentCustomer() {
         User user = securityUtil.getCurrentUser();
         if (!(user instanceof Customer)) {
-            throw new RuntimeException("Current user is not a Customer.");
+            throw new InvalidParamException(ErrorCode.INVALID_PARAMETER);
         }
         return (Customer) user;
     }
 
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
     @Transactional

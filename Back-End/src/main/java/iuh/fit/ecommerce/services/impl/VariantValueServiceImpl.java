@@ -7,6 +7,7 @@ import iuh.fit.ecommerce.dtos.request.variant.VariantValueAddRequest;
 import iuh.fit.ecommerce.dtos.response.variant.VariantValueResponse;
 import iuh.fit.ecommerce.entities.Variant;
 import iuh.fit.ecommerce.entities.VariantValue;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.VariantValueMapper;
@@ -32,12 +33,10 @@ public class VariantValueServiceImpl implements VariantValueService {
          Set<String> uniqueValues = new HashSet<>();
          for (VariantValueAddRequest req : requests) {
              if (!uniqueValues.add(req.getValue())) {
-                 throw new ConflictException("Duplicate value '" + req.getValue() + "' found in request");
+                 throw new ConflictException(ErrorCode.VARIANT_VALUE_DUPLICATE);
              }
              if (variantValueRepository.existsByValueAndVariantId(req.getValue(), variant.getId())) {
-                 throw new ConflictException(
-                         String.format("Variant value '%s' already exists for variant id %d", req.getValue(), variant.getId())
-                 );
+                 throw new ConflictException(ErrorCode.VARIANT_VALUE_EXISTS);
              }
          }
      }
@@ -141,11 +140,11 @@ public class VariantValueServiceImpl implements VariantValueService {
 
     public VariantValue getVariantValueEntityById(Long id) {
         return variantValueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("VariantValue not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VARIANT_VALUE_NOT_FOUND));
     }
 
      private Variant getVariantEntityById(Long id) {
         return variantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Variant not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VARIANT_NOT_FOUND));
     }
 }

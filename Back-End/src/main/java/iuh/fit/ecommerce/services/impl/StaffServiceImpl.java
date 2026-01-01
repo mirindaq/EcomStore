@@ -7,6 +7,7 @@ import iuh.fit.ecommerce.dtos.response.staff.StaffResponse;
 import iuh.fit.ecommerce.entities.Role;
 import iuh.fit.ecommerce.entities.Staff;
 import iuh.fit.ecommerce.entities.UserRole;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.StaffMapper;
@@ -39,7 +40,7 @@ public class StaffServiceImpl implements StaffService {
     @Transactional
     public StaffResponse createStaff(StaffAddRequest staffAddRequest) {
         if (staffRepository.existsByEmail(staffAddRequest.getEmail())) {
-            throw new ConflictException("Email already exists");
+            throw new ConflictException(ErrorCode.STAFF_EMAIL_EXISTS);
         }
         Staff staff = mapAddRequestToStaff(staffAddRequest);
 
@@ -103,7 +104,7 @@ public class StaffServiceImpl implements StaffService {
     @Transactional(readOnly = true)
     public StaffResponse getStaffById(Long id) {
         Staff staff = staffRepository.findByIdWithUserRoles(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.STAFF_NOT_FOUND));
         return staffMapper.toResponse(staff);
     }
 
@@ -126,7 +127,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public Staff getStaffEntityById(Long id) {
         return staffRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Staff not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.STAFF_NOT_FOUND));
     }
 
 
@@ -171,11 +172,11 @@ public class StaffServiceImpl implements StaffService {
 
     private UserRole mapRoleIdToUserRole(Long roleId, Staff staff) {
         if (roleId == null) {
-            throw new IllegalArgumentException("Role ID cannot be null");
+            throw new IllegalArgumentException(ErrorCode.ROLE_ID_CANNOT_BE_NULL.getMessage());
         }
 
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
 
         UserRole userRole = new UserRole();
         userRole.setRole(role);

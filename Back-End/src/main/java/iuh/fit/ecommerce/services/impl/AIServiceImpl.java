@@ -7,6 +7,7 @@ import iuh.fit.ecommerce.entities.Customer;
 import iuh.fit.ecommerce.entities.Order;
 import iuh.fit.ecommerce.entities.Product;
 import iuh.fit.ecommerce.entities.ProductVariant;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ProductMapper;
 import iuh.fit.ecommerce.repositories.CustomerRepository;
@@ -142,7 +143,7 @@ public class AIServiceImpl implements AIService {
 
     private String buildContextForCustomer(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CUSTOMER_NOT_FOUND));
         
         StringBuilder context = new StringBuilder();
 

@@ -9,7 +9,7 @@ import iuh.fit.ecommerce.dtos.response.category.CategoryResponse;
 import iuh.fit.ecommerce.entities.Brand;
 import iuh.fit.ecommerce.entities.Category;
 import iuh.fit.ecommerce.entities.CategoryBrand;
-// import iuh.fit.ecommerce.exceptions.custom.ConflictException; // <-- XÓA
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.BrandMapper;
 // import iuh.fit.ecommerce.mappers.CategoryBrandMapper; // <-- XÓA (Trừ khi bạn dùng ở đâu khác)
@@ -76,7 +76,7 @@ public class CategoryBrandServiceImpl implements CategoryBrandService {
             Long categoryId, String brandName
     ) {
         if (!categoryRepository.existsById(categoryId)) {
-            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND);
         }
 
 
@@ -92,7 +92,7 @@ public class CategoryBrandServiceImpl implements CategoryBrandService {
             Long brandId, String categoryName
     ) {
         if (!brandRepository.existsById(brandId)) {
-            throw new ResourceNotFoundException("Brand not found with id: " + brandId);
+            throw new ResourceNotFoundException(ErrorCode.BRAND_NOT_FOUND);
         }
 
         List<Category> categories = categoryBrandRepository.findCategoriesByBrandIdAndName(

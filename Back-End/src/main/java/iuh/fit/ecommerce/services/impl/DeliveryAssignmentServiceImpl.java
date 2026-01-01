@@ -9,6 +9,7 @@ import iuh.fit.ecommerce.entities.Order;
 import iuh.fit.ecommerce.entities.Staff;
 import iuh.fit.ecommerce.enums.DeliveryStatus;
 import iuh.fit.ecommerce.enums.OrderStatus;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.exceptions.custom.UnauthorizedException;
@@ -52,13 +53,13 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
         Staff leader = securityUtils.getCurrentStaff();
 
         if(leader.getLeader() == null || !leader.getLeader()) {
-            throw new InvalidParamException("Only team leaders can assign shippers to orders");
+            throw new InvalidParamException(ErrorCode.DELIVERY_ONLY_TEAM_LEADER);
         }
 
         Order order = orderService.findById(request.getOrderId());
 
         if (!SHIPPED.equals(order.getStatus())) {
-            throw new InvalidParamException("Order must be in SHIPPED status to assign shipper");
+            throw new InvalidParamException(ErrorCode.DELIVERY_INVALID_STATUS);
         }
 
         Staff shipper = staffService.getStaffEntityById(request.getShipperId());
@@ -67,13 +68,13 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
                 shipper, DeliveryStatus.DELIVERING);
 
         if (isDelivering) {
-            throw new InvalidParamException("Shipper #" + shipper.getId() + " (" + shipper.getFullName() + ") is currently delivering another order");
+            throw new InvalidParamException(ErrorCode.DELIVERY_SHIPPER_BUSY);
         }
 
         Optional<DeliveryAssignment> existingAssignment = deliveryAssignmentRepository.findByOrder_Id(order.getId());
 
         if(existingAssignment.isPresent()) {
-            throw new InvalidParamException("Order already has a shipper assigned");
+            throw new InvalidParamException(ErrorCode.DELIVERY_ALREADY_ASSIGNED);
         }
 
         DeliveryAssignment deliveryAssignment = DeliveryAssignment.builder()
@@ -105,18 +106,18 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
         Staff currentStaff = securityUtils.getCurrentStaff();
 
         if (!deliveryAssignment.getShipper().getId().equals(currentStaff.getId())) {
-            throw new UnauthorizedException("You are not assigned to this delivery");
+            throw new UnauthorizedException(ErrorCode.DELIVERY_NOT_ASSIGNED_TO_USER);
         }
 
         if (!DeliveryStatus.ASSIGNED.equals(deliveryAssignment.getDeliveryStatus())) {
-            throw new InvalidParamException("Delivery must be in ASSIGNED status to start");
+            throw new InvalidParamException(ErrorCode.DELIVERY_INVALID_STATUS_TO_START);
         }
 
         boolean isCurrentlyDelivering = deliveryAssignmentRepository.existsByShipperAndDeliveryStatus(
                 currentStaff, DeliveryStatus.DELIVERING);
 
         if (isCurrentlyDelivering) {
-            throw new InvalidParamException("You are currently delivering another order. Please complete it first.");
+            throw new InvalidParamException(ErrorCode.DELIVERY_ANOTHER_ORDER_IN_PROGRESS);
         }
 
         deliveryAssignment.setDeliveryStatus(DeliveryStatus.DELIVERING);
@@ -135,11 +136,11 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
         Staff currentStaff = securityUtils.getCurrentStaff();
 
         if (!deliveryAssignment.getShipper().getId().equals(currentStaff.getId())) {
-            throw new UnauthorizedException("You are not assigned to this delivery");
+            throw new UnauthorizedException(ErrorCode.DELIVERY_NOT_ASSIGNED_TO_USER);
         }
 
         if (!DeliveryStatus.DELIVERING.equals(deliveryAssignment.getDeliveryStatus())) {
-            throw new InvalidParamException("Delivery must be in DELIVERING status to complete");
+            throw new InvalidParamException(ErrorCode.DELIVERY_INVALID_STATUS_TO_COMPLETE);
         }
 
         if (Boolean.TRUE.equals(request.getSuccess())) {
@@ -172,7 +173,7 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 
     private DeliveryAssignment findById(Long id) {
         return deliveryAssignmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Delivery assignment not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.DELIVERY_NOT_FOUND));
     }
 
     @Override

@@ -11,6 +11,7 @@ import iuh.fit.ecommerce.entities.ProductVariant;
 import iuh.fit.ecommerce.entities.Promotion;
 import iuh.fit.ecommerce.entities.PromotionTarget;
 import iuh.fit.ecommerce.enums.PromotionType;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ProductMapper;
 import iuh.fit.ecommerce.mappers.PromotionMapper;
@@ -61,9 +62,8 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public PromotionResponse getPromotionById(Long id) {
-        // Sử dụng query với FETCH để load đầy đủ productVariant và product
         Promotion promotion = promotionRepository.findByIdWithTargets(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Promotion not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PROMOTION_NOT_FOUND));
         return promotionMapper.toResponse(promotion);
     }
 
@@ -130,7 +130,7 @@ public class PromotionServiceImpl implements PromotionService {
     private Promotion findById(Long id) {
         // Sử dụng query với FETCH để load đầy đủ productVariant và product
         return promotionRepository.findByIdWithTargets(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Promotion not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PROMOTION_NOT_FOUND));
     }
 
     @Override

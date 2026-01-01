@@ -8,6 +8,7 @@ import iuh.fit.ecommerce.dtos.response.order.OrderResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.enums.OrderStatus;
 import iuh.fit.ecommerce.enums.PaymentMethod;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.OrderMapper;
@@ -172,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
 
         for (StaffOrderItem item : items) {
             ProductVariant variant = productVariantRepository.findById(item.getProductVariantId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with id: " + item.getProductVariantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
             int quantity = item.getQuantity();
 
@@ -226,7 +227,7 @@ public class OrderServiceImpl implements OrderService {
                 updateVariantStockAfterOrderCreated(order.getOrderDetails());
                 return ((PaymentServiceImpl) paymentService).createPaymentUrl(voucher, order, null, httpRequest, platform, true);
             }
-            default -> throw new InvalidParamException("Unsupported payment method for staff order");
+            default -> throw new InvalidParamException(ErrorCode.ORDER_INVALID_PAYMENT_METHOD);
         }
     }
 
@@ -244,7 +245,7 @@ public class OrderServiceImpl implements OrderService {
                 try {
                     orderStatuses.add(OrderStatus.valueOf(s.trim().toUpperCase()));
                 } catch (IllegalArgumentException e) {
-                    throw new InvalidParamException("Invalid status: " + s);
+                    throw new InvalidParamException(ErrorCode.ORDER_INVALID_STATUS);
                 }
             }
         }
@@ -265,17 +266,17 @@ public class OrderServiceImpl implements OrderService {
 
     public Order findById(Long id) {
         return orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ORDER_NOT_FOUND));
     }
 
     private Cart getCustomerCart(Customer customer) {
         return cartRepository.findByCustomer_Id(customer.getId())
-                .orElseThrow(() -> new InvalidParamException("Customer has no cart to create order"));
+                .orElseThrow(() -> new InvalidParamException(ErrorCode.ORDER_CART_EMPTY));
     }
 
     private void validateCartNotEmpty(Cart cart) {
         if (cart.getCartDetails().isEmpty()) {
-            throw new InvalidParamException("Cart is empty");
+            throw new InvalidParamException(ErrorCode.ORDER_CART_EMPTY);
         }
     }
 
@@ -300,7 +301,7 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
 
         if (selectedItems.isEmpty()) {
-            throw new InvalidParamException("No valid cart items found to create order");
+            throw new InvalidParamException(ErrorCode.ORDER_NO_VALID_ITEMS);
         }
 
         for (CartDetail cartDetail : selectedItems) {
@@ -409,7 +410,7 @@ public class OrderServiceImpl implements OrderService {
                 updateVariantStockAfterOrderCreated(order.getOrderDetails());
                 return paymentService.createPayOsPaymentUrl(voucher, order, cartItemIds, platform);
             }
-            default -> throw new InvalidParamException("Unsupported payment method");
+            default -> throw new InvalidParamException(ErrorCode.ORDER_INVALID_PAYMENT_METHOD);
         }
     }
 
@@ -447,19 +448,19 @@ public class OrderServiceImpl implements OrderService {
     private void validateVoucher(Voucher voucher, Customer customer, double currentAmount) {
         if (!ALL.equals(voucher.getVoucherType())) {
             boolean assigned = voucherCustomerRepository.existsByVoucherAndCustomer(voucher, customer);
-            if (!assigned) throw new InvalidParamException("Voucher not assigned to this customer");
+            if (!assigned) throw new InvalidParamException(ErrorCode.VOUCHER_NOT_ASSIGNED);
         }
 
         boolean used = voucherUsageHistoryRepository.existsByVoucherAndOrder_Customer(voucher, customer);
-        if (used) throw new InvalidParamException("Voucher already used by this customer");
+        if (used) throw new InvalidParamException(ErrorCode.VOUCHER_ALREADY_USED);
 
         LocalDate today = LocalDate.now();
         if (today.isBefore(voucher.getStartDate()) || today.isAfter(voucher.getEndDate())) {
-            throw new InvalidParamException("Voucher expired or not active");
+            throw new InvalidParamException(ErrorCode.VOUCHER_EXPIRED);
         }
 
         if (voucher.getMinOrderAmount() != null && currentAmount < voucher.getMinOrderAmount()) {
-            throw new InvalidParamException("Order does not meet minimum amount for voucher");
+            throw new InvalidParamException(ErrorCode.VOUCHER_MINIMUM_AMOUNT_NOT_MET);
         }
     }
 

@@ -17,6 +17,7 @@ import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.category.CategoryResponse;
 import iuh.fit.ecommerce.entities.Attribute;
 import iuh.fit.ecommerce.entities.Category;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.CategoryMapper;
@@ -96,16 +97,16 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category getCategoryEntityById(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
     private void validateCategoryName(String name, Category existingCategory) {
         if (existingCategory == null && categoryRepository.existsByName(name)) {
-            throw new ConflictException("Category name already exists");
+            throw new ConflictException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
         if (existingCategory != null && !name.equals(existingCategory.getName()) &&
                 categoryRepository.existsByName(name)) {
-            throw new ConflictException("Category name already exists");
+            throw new ConflictException(ErrorCode.CATEGORY_NAME_EXISTS);
         }
     }
 

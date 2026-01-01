@@ -5,6 +5,8 @@ import iuh.fit.ecommerce.dtos.request.purchaseOrder.PurchaseOrderRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.purchaseOrder.PurchaseOrderResponse;
 import iuh.fit.ecommerce.entities.*;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.PurchaseOrderDetailMapper;
 import iuh.fit.ecommerce.mappers.PurchaseOrderMapper;
@@ -46,10 +48,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         // Validate supplier
         Supplier supplier = supplierRepository.findById(request.getSupplierId())
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + request.getSupplierId()));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SUPPLIER_NOT_FOUND));
 
         if (!supplier.getStatus()) {
-            throw new IllegalArgumentException("Supplier is inactive");
+            throw new InvalidParamException(ErrorCode.SUPPLIER_INACTIVE);
         }
 
         // Create purchase order
@@ -65,7 +67,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         for (PurchaseOrderDetailRequest detailRequest : request.getDetails()) {
             ProductVariant productVariant = productVariantRepository.findById(detailRequest.getProductVariantId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with id: " + detailRequest.getProductVariantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
             PurchaseOrderDetail detail = new PurchaseOrderDetail();
             detail.setPurchaseOrder(purchaseOrder);
@@ -151,7 +153,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     public PurchaseOrderResponse getPurchaseOrderById(Long id) {
         PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PURCHASE_ORDER_NOT_FOUND));
 
         PurchaseOrderResponse response = purchaseOrderMapper.toResponse(purchaseOrder);
         

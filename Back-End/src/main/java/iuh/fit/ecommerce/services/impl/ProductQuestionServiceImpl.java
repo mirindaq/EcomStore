@@ -6,6 +6,7 @@ import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionResponse;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionWithProductResponse;
 import iuh.fit.ecommerce.entities.*;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ProductQuestionMapper;
 import iuh.fit.ecommerce.mappers.ProductQuestionWithProductMapper;
@@ -67,7 +68,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         User user = securityUtils.getCurrentUser();
 
         ProductQuestion productQuestion = productQuestionRepository.findById(request.getProductQuestionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product question not found with id: " + request.getProductQuestionId()));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_QUESTION_NOT_FOUND));
 
 
         ProductQuestionAnswer productQuestionAnswer = ProductQuestionAnswer.builder()
@@ -101,7 +102,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     @Override
     public ProductQuestionWithProductResponse updateProductQuestionStatus(Long id, Boolean status) {
         ProductQuestion productQuestion = productQuestionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product question not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_QUESTION_NOT_FOUND));
 
         productQuestion.setStatus(status);
         ProductQuestion saved = productQuestionRepository.save(productQuestion);
@@ -113,7 +114,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     @Override
     public void deleteProductQuestion(Long id) {
         ProductQuestion productQuestion = productQuestionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product question not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_QUESTION_NOT_FOUND));
 
         productQuestionRepository.delete(productQuestion);
     }
@@ -122,7 +123,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     @Override
     public ProductQuestionWithProductResponse updateProductQuestionAnswerStatus(Long answerId, Boolean status) {
         ProductQuestion productQuestion = productQuestionRepository.findByAnswerId(answerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product question answer not found with id: " + answerId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_QUESTION_ANSWER_NOT_FOUND));
 
         productQuestion.getAnswers().stream()
                 .filter(answer -> answer.getId().equals(answerId))
@@ -137,7 +138,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     @Override
     public void deleteProductQuestionAnswer(Long answerId) {
         ProductQuestion productQuestion = productQuestionRepository.findByAnswerId(answerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product question answer not found with id: " + answerId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_QUESTION_ANSWER_NOT_FOUND));
 
         productQuestion.getAnswers().removeIf(answer -> answer.getId().equals(answerId));
 

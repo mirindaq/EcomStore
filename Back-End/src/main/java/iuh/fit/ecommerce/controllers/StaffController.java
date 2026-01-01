@@ -6,6 +6,8 @@ import iuh.fit.ecommerce.dtos.request.staff.StaffUpdateRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.staff.StaffResponse;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.services.StaffService;
 import iuh.fit.ecommerce.services.excel.StaffExcelService;
 import jakarta.validation.Valid;
@@ -111,7 +113,7 @@ public class StaffController {
                                 .contentLength(bytes.length)
                                 .body(resource);
                 } catch (Exception e) {
-                        throw new RuntimeException("Failed to generate template: " + e.getMessage());
+                        throw new RuntimeException(ErrorCode.EXCEL_TEMPLATE_GENERATION_FAILED.getMessage(), e);
                 }
         }
 
@@ -122,7 +124,7 @@ public class StaffController {
 
                 try {
                         if (file == null || file.isEmpty()) {
-                                throw new RuntimeException("File is null or empty! Please select a valid Excel file.");
+                                throw new InvalidParamException(ErrorCode.EXCEL_FILE_EMPTY);
                         }
 
                         System.out.println("Received file: " + file.getOriginalFilename() + ", Size: " + file.getSize());
@@ -135,7 +137,7 @@ public class StaffController {
                                 result));
                 } catch (Exception e) {
                         e.printStackTrace();
-                        throw new RuntimeException("Import failed: " + e.getMessage(), e);
+                        throw new RuntimeException(ErrorCode.EXCEL_IMPORT_FAILED.getMessage(), e);
                 }
         }
 
@@ -157,7 +159,7 @@ public class StaffController {
                                 .contentLength(bytes.length)
                                 .body(resource);
                 } catch (Exception e) {
-                        throw new RuntimeException("Failed to export staffs: " + e.getMessage());
+                        throw new RuntimeException(ErrorCode.EXCEL_EXPORT_FAILED.getMessage(), e);
                 }
         }
 }

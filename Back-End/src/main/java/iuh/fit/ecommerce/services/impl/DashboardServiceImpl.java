@@ -6,6 +6,8 @@ import iuh.fit.ecommerce.dtos.projection.TopVoucherProjection;
 import iuh.fit.ecommerce.dtos.response.dashboard.*;
 import iuh.fit.ecommerce.entities.OrderDetail;
 import iuh.fit.ecommerce.entities.PromotionUsage;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.repositories.OrderDetailRepository;
 import iuh.fit.ecommerce.repositories.OrderRepository;
 import iuh.fit.ecommerce.repositories.PromotionUsageRepository;
@@ -542,7 +544,7 @@ public class DashboardServiceImpl implements DashboardService {
             // Nếu không có usage, vẫn trả về thông tin voucher
             var voucher = voucherUsageHistoryRepository.findFirstByVoucherId(voucherId)
                     .map(iuh.fit.ecommerce.entities.VoucherUsageHistory::getVoucher)
-                    .orElseThrow(() -> new RuntimeException("Voucher not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VOUCHER_NOT_FOUND));
             
             return VoucherDetailResponse.builder()
                     .voucherId(voucherId)
@@ -663,7 +665,7 @@ public class DashboardServiceImpl implements DashboardService {
             // Nếu không có usage, vẫn trả về thông tin promotion
             var promotion = promotionUsageRepository.findFirstByPromotionId(promotionId)
                     .map(PromotionUsage::getPromotion)
-                    .orElseThrow(() -> new RuntimeException("Promotion not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PROMOTION_NOT_FOUND));
             
             return PromotionDetailResponse.builder()
                     .promotionId(promotionId)

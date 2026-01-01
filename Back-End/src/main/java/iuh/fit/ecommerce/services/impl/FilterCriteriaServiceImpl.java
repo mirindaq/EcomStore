@@ -8,6 +8,7 @@ import iuh.fit.ecommerce.dtos.response.filterCriteria.FilterValueResponse;
 import iuh.fit.ecommerce.entities.Category;
 import iuh.fit.ecommerce.entities.FilterCriteria;
 import iuh.fit.ecommerce.entities.FilterValue;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.FilterCriteriaMapper;
 import iuh.fit.ecommerce.repositories.CategoryRepository;
@@ -65,7 +66,7 @@ public class FilterCriteriaServiceImpl implements FilterCriteriaService {
     @Override
     public List<FilterCriteriaResponse> getFilterCriteriaByCategoryId(Long categoryId, String name) {
         if (!categoryRepository.existsById(categoryId)) {
-            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND);
         }
 
         List<FilterCriteria> filterCriteriaList = filterCriteriaRepository.findByCategoryIdAndName(categoryId, name);
@@ -75,7 +76,7 @@ public class FilterCriteriaServiceImpl implements FilterCriteriaService {
     @Override
     public List<FilterCriteriaResponse> getFilterCriteriaByCategorySlug(String categorySlug, String name) {
         Category category = categoryRepository.findBySlug(categorySlug)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with slug: " + categorySlug));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
 
         List<FilterCriteria> filterCriteriaList = filterCriteriaRepository.findByCategoryIdAndName(category.getId(), name);
         return filterCriteriaMapper.toResponseList(filterCriteriaList);
@@ -105,7 +106,7 @@ public class FilterCriteriaServiceImpl implements FilterCriteriaService {
     @Override
     public List<FilterValueResponse> getFilterValuesByCriteriaId(Long filterCriteriaId, String value) {
         if (!filterCriteriaRepository.existsById(filterCriteriaId)) {
-            throw new ResourceNotFoundException("FilterCriteria not found with id: " + filterCriteriaId);
+            throw new ResourceNotFoundException(ErrorCode.FILTER_CRITERIA_NOT_FOUND);
         }
 
         List<FilterValue> filterValues = filterValueRepository.findByFilterCriteriaIdAndValue(filterCriteriaId, value);
@@ -127,7 +128,7 @@ public class FilterCriteriaServiceImpl implements FilterCriteriaService {
 
     private FilterCriteria getFilterCriteriaEntityById(Long id) {
         return filterCriteriaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("FilterCriteria not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FILTER_CRITERIA_NOT_FOUND));
     }
 }
 

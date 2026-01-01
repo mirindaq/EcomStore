@@ -35,7 +35,7 @@ public class ProductController {
     @PostMapping("")
     public ResponseEntity<ResponseSuccess<?>> createProduct(@Valid @RequestBody ProductAddRequest productAddRequest) {
         productService.createProduct(productAddRequest);
-        return ResponseEntity.ok(new ResponseSuccess<>(
+        return ResponseEntity.status(CREATED).body(new ResponseSuccess<>(
                 CREATED,
                 "Create product success",
                 null

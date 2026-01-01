@@ -22,7 +22,6 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-//fix
     @GetMapping("")
     public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<CategoryResponse>>>> getCategories(
             @RequestParam(defaultValue = "1") int page,

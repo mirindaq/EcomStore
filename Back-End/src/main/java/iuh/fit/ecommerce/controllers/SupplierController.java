@@ -5,6 +5,8 @@ import iuh.fit.ecommerce.dtos.request.supplier.SupplierRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.supplier.SupplierResponse;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.services.SupplierService;
 import iuh.fit.ecommerce.services.excel.SupplierExcelService;
 import jakarta.validation.Valid;
@@ -130,7 +132,7 @@ public class SupplierController {
                     .contentLength(bytes.length)
                     .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate template: " + e.getMessage());
+            throw new RuntimeException(ErrorCode.EXCEL_TEMPLATE_GENERATION_FAILED.getMessage(), e);
         }
     }
 
@@ -144,7 +146,7 @@ public class SupplierController {
 
         try {
             if (file == null || file.isEmpty()) {
-                throw new RuntimeException("File is null or empty! Please select a valid Excel file.");
+                throw new InvalidParamException(ErrorCode.EXCEL_FILE_EMPTY);
             }
 
             // Có thể log ra console để debug như mẫu cũ nếu muốn
@@ -158,7 +160,7 @@ public class SupplierController {
                     result));
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Import failed: " + e.getMessage(), e);
+            throw new RuntimeException(ErrorCode.EXCEL_IMPORT_FAILED.getMessage(), e);
         }
     }
 
@@ -183,7 +185,7 @@ public class SupplierController {
                     .contentLength(bytes.length)
                     .body(resource);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to export suppliers: " + e.getMessage());
+            throw new RuntimeException(ErrorCode.EXCEL_EXPORT_FAILED.getMessage(), e);
         }
     }
 }

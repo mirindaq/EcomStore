@@ -6,6 +6,7 @@ import iuh.fit.ecommerce.dtos.response.product.ProductVariantPromotionResponse;
 import iuh.fit.ecommerce.entities.Product;
 import iuh.fit.ecommerce.entities.ProductVariant;
 import iuh.fit.ecommerce.entities.Promotion;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.mappers.ProductVariantMapper;
 import iuh.fit.ecommerce.repositories.ProductVariantRepository;
@@ -40,7 +41,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     @Override
     public List<ProductVariantPromotionResponse> getProductsVariantPromotions(ProductVariantPromotionRequest productVariantPromotionRequest) {
         if(productVariantPromotionRequest.getProductVariantIds().isEmpty())
-            throw new InvalidParamException("Product variant ids list is empty");
+            throw new InvalidParamException(ErrorCode.PRODUCT_VARIANT_IDS_EMPTY);
 
         Map<Long, ProductVariant> productVariants = productVariantRepository.findAllById(
                 productVariantPromotionRequest.getProductVariantIds()

@@ -3,6 +3,7 @@ package iuh.fit.ecommerce.exceptions;
 import io.jsonwebtoken.JwtException;
 import iuh.fit.ecommerce.dtos.response.base.ResponseError;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.exceptions.custom.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +38,11 @@ public class GlobalExceptionHandler {
         String errorMessage = String.join(", ", errorMessages);
         log.warn("Validation error at {}: {}", request.getDescription(false), errorMessage);
 
+        ErrorCode errorCode = ErrorCode.VALIDATION_ERROR;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .message(errorMessage)
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();
@@ -50,10 +52,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(CONFLICT)
     public ResponseError handleConflictException(ConflictException e, WebRequest request) {
         log.warn("Conflict error at {}: {}", request.getDescription(false), e.getMessage());
+        ErrorCode errorCode = e.getErrorCode();
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(CONFLICT.value())
-                .error(CONFLICT.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .message(e.getMessage())
                 .build();
@@ -61,12 +64,27 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(NOT_FOUND)
-    public ResponseError handleDataNotFoundException(ResourceNotFoundException e , WebRequest request){
+    public ResponseError handleDataNotFoundException(ResourceNotFoundException e, WebRequest request) {
         log.warn("Resource not found at {}: {}", request.getDescription(false), e.getMessage());
+        ErrorCode errorCode = e.getErrorCode();
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(NOT_FOUND.value())
-                .error(NOT_FOUND.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .message(e.getMessage())
+                .build();
+    }
+
+    @ExceptionHandler(InvalidParamException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseError handleInvalidParamException(InvalidParamException e, WebRequest request) {
+        log.warn("Invalid parameter at {}: {}", request.getDescription(false), e.getMessage());
+        ErrorCode errorCode = e.getErrorCode();
+        return ResponseError.builder()
+                .timestamp(new Date())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .message(e.getMessage())
                 .build();
@@ -76,10 +94,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseError handleIllegalArgumentException(IllegalArgumentException e, WebRequest request) {
         log.warn("Illegal argument at {}: {}", request.getDescription(false), e.getMessage());
+        ErrorCode errorCode = ErrorCode.ILLEGAL_ARGUMENT;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .message(e.getMessage())
                 .build();
@@ -89,12 +108,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseError handleAccessDeniedException(AccessDeniedException e, WebRequest request) {
         log.warn("Access denied at {}: {}", request.getDescription(false), e.getMessage());
+        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.FORBIDDEN.value())
-                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
-                .message("Access denied. You don't have the required role.")
+                .message(errorCode.getMessage())
                 .build();
     }
 
@@ -102,23 +122,25 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseError handleAuthenticationException(AuthenticationException ex, WebRequest request) {
         log.warn("Authentication error at {}: {}", request.getDescription(false), ex.getMessage());
+        ErrorCode errorCode = ErrorCode.TOKEN_INVALID;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
-                .message("Unauthorized or invalid token")
+                .message(errorCode.getMessage())
                 .build();
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseError handleIllegalStateExceptionException(IllegalStateException ex, WebRequest request) {
         log.error("Illegal state error at {}: {}", request.getDescription(false), ex.getMessage(), ex);
+        ErrorCode errorCode = ErrorCode.ILLEGAL_STATE;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .message(ex.getMessage())
                 .build();
@@ -129,12 +151,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseError handleException(Exception ex, WebRequest request) {
         log.error("Unhandled exception at {}: {}", request.getDescription(false), ex.getMessage(), ex);
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
-                .message(ex.getMessage())
+                .message(errorCode.getMessage())
                 .build();
     }
 
@@ -142,10 +165,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseError handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
         log.warn("Unauthorized error at {}: {}", request.getDescription(false), ex.getMessage());
+        ErrorCode errorCode = ex.getErrorCode();
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .message(ex.getMessage())
                 .build();
@@ -155,12 +179,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseError handleJwtException(JwtException ex, WebRequest request) {
         log.warn("JWT error at {}: {}", request.getDescription(false), ex.getMessage());
+        ErrorCode errorCode = ErrorCode.TOKEN_INVALID;
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
-                .message(ex.getMessage())
+                .message(errorCode.getMessage())
                 .build();
     }
 //

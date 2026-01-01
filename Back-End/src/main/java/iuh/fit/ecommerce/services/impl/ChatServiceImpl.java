@@ -6,6 +6,7 @@ import iuh.fit.ecommerce.dtos.response.chat.ChatResponse;
 import iuh.fit.ecommerce.dtos.response.chat.MessageResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.enums.MessageType;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ChatMapper;
@@ -44,7 +45,7 @@ public class ChatServiceImpl implements ChatService {
          Customer customer =customerService.getCustomerEntityById(chatRequest.getCustomerId());
 
         if (chatRepository.existsByCustomerId(chatRequest.getCustomerId())) {
-            throw new IllegalStateException("Chat already exists for this customer");
+            throw new IllegalStateException(ErrorCode.CHAT_ALREADY_EXISTS.getMessage());
         }
         
         Chat chat = Chat.builder()
@@ -69,7 +70,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatResponse getChatByCustomerId(Long customerId) {
         Chat chat = chatRepository.findByCustomerId(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chat not found for customer id: " + customerId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CHAT_NOT_FOUND_FOR_CUSTOMER));
         ChatResponse response = chatMapper.toResponse(chat);
         chatMapper.setUnreadCountForUser(response, customerId);
         return response;
@@ -131,7 +132,7 @@ public class ChatServiceImpl implements ChatService {
         Staff staff = staffService.getStaffEntityById(staffId);
 
         if (hasShipperRole(staff)) {
-            throw new InvalidParamException("Cannot assign chat to shipper. Only staff can be assigned to chat.");
+            throw new InvalidParamException(ErrorCode.CHAT_CANNOT_ASSIGN_TO_SHIPPER);
         }
 
         chat.setStaff(staff);
@@ -160,7 +161,7 @@ public class ChatServiceImpl implements ChatService {
         Staff staff = staffService.getStaffEntityById(staffId);
 
         if (hasShipperRole(staff)) {
-            throw new InvalidParamException("Cannot transfer chats to shipper. Only staff can be assigned to chat.");
+            throw new InvalidParamException(ErrorCode.CHAT_CANNOT_TRANSFER_TO_SHIPPER);
         }
         
         List<Chat> chats = chatRepository.findAllById(chatIds);
@@ -190,7 +191,7 @@ public class ChatServiceImpl implements ChatService {
 
     private Chat getChatEntityById(Long chatId) {
         return chatRepository.findById(chatId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chat not found with id: " + chatId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CHAT_NOT_FOUND));
     }
 
     @Override
@@ -251,7 +252,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public List<MessageResponse> getMessagesByChatId(Long chatId) {
         if (!chatRepository.existsById(chatId)) {
-            throw new ResourceNotFoundException("Chat not found with id: " + chatId);
+            throw new ResourceNotFoundException(ErrorCode.CHAT_NOT_FOUND);
         }
         
         List<Message> messages = messageRepository.findByChatIdOrderByCreatedAtAsc(chatId);
@@ -267,12 +268,12 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = getChatEntityById(chatId);
 
         if (!chat.getCustomer().getId().equals(currentUser.getId())) {
-            throw new IllegalStateException("User is not the customer of this chat");
+            throw new IllegalStateException(ErrorCode.CHAT_USER_NOT_CUSTOMER.getMessage());
         }
 
         Optional<Message> lastMessageOptional = messageRepository.findTopByChat_IdOrderByCreatedAtDesc(chatId);
         if (lastMessageOptional.isEmpty()) {
-            throw new ResourceNotFoundException("No messages found in chat with id: " + chatId);
+            throw new ResourceNotFoundException(ErrorCode.CHAT_NO_MESSAGES);
         }
 
         Message lastMessage = lastMessageOptional.get();
@@ -290,16 +291,16 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = getChatEntityById(chatId);
 
         if (chat.getStaff() == null) {
-            throw new IllegalStateException("Chat has no staff assigned");
+            throw new IllegalStateException(ErrorCode.CHAT_NO_STAFF_ASSIGNED.getMessage());
         }
 
         if (!chat.getStaff().getId().equals(currentUser.getId())) {
-            throw new IllegalStateException("Staff is not assigned to this chat");
+            throw new IllegalStateException(ErrorCode.CHAT_STAFF_NOT_ASSIGNED.getMessage());
         }
 
         Optional<Message> lastMessageOptional = messageRepository.findTopByChat_IdOrderByCreatedAtDesc(chatId);
         if (lastMessageOptional.isEmpty()) {
-            throw new ResourceNotFoundException("No messages found in chat with id: " + chatId);
+            throw new ResourceNotFoundException(ErrorCode.CHAT_NO_MESSAGES);
         }
 
         Message lastMessage = lastMessageOptional.get();
@@ -314,7 +315,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public Long getUnreadMessageCount(Long chatId, Long userId) {
         if (!chatRepository.existsById(chatId)) {
-            throw new ResourceNotFoundException("Chat not found with id: " + chatId);
+            throw new ResourceNotFoundException(ErrorCode.CHAT_NOT_FOUND);
         }
         return messageRepository.countUnreadMessagesByChatIdNotFromUserId(chatId, userId);
     }

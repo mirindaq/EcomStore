@@ -4,6 +4,7 @@ import iuh.fit.ecommerce.dtos.request.supplier.SupplierRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.supplier.SupplierResponse;
 import iuh.fit.ecommerce.entities.Supplier;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.SupplierMapper;
@@ -98,18 +99,18 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     public Supplier getSupplierEntityById(Long id) {
         return supplierRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SUPPLIER_NOT_FOUND));
     }
 
     private void validateSupplierPhone(String phone) {
         if (supplierRepository.existsByPhone(phone)) {
-            throw new ConflictException("Số điện thoại này đã được sử dụng.");
+            throw new ConflictException(ErrorCode.SUPPLIER_PHONE_EXISTS);
         }
     }
 
     private void validateSupplierPhone(String phone, Long id) {
         if (supplierRepository.existsByPhoneAndIdNot(phone, id)) {
-            throw new ConflictException("Số điện thoại này đã được sử dụng.");
+            throw new ConflictException(ErrorCode.SUPPLIER_PHONE_EXISTS);
         }
     }
 }

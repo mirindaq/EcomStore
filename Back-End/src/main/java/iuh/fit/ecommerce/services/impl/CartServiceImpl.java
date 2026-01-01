@@ -5,6 +5,8 @@ import iuh.fit.ecommerce.dtos.request.cart.CartUpdateQuantityRequest;
 import iuh.fit.ecommerce.dtos.response.cart.CartResponse;
 import iuh.fit.ecommerce.dtos.response.cart.CartWithCustomerResponse;
 import iuh.fit.ecommerce.entities.*;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
+import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.CartMapper;
 import iuh.fit.ecommerce.repositories.CartRepository;
@@ -83,7 +85,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public void clearCart(Long userId) {
         Cart cart = cartRepository.findByCustomer_Id(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CART_NOT_FOUND));
 
         cart.getCartDetails().clear();
         cart.setTotalItems(0L);
@@ -98,7 +100,7 @@ public class CartServiceImpl implements CartService {
         CartDetail cartDetail = findCartDetail(cart, productVariant);
 
         if (cartDetail == null) {
-            throw new ResourceNotFoundException("ProductVariant not found in cart");
+            throw new ResourceNotFoundException(ErrorCode.CART_ITEM_NOT_FOUND);
         }
 
         cartDetail.setQuantity(request.getQuantity().longValue());
@@ -126,7 +128,7 @@ public class CartServiceImpl implements CartService {
 
     private ProductVariant findProductVariant(Long productVariantId) {
         return productVariantRepository.findById(productVariantId)
-                .orElseThrow(() -> new ResourceNotFoundException("ProductVariant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
     }
 
     private CartDetail findCartDetail(Cart cart, ProductVariant productVariant) {
@@ -175,7 +177,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartWithCustomerResponse getCartByCustomerId(Long customerId) {
         Cart cart = cartRepository.findByCustomer_Id(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found for customer"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CART_NOT_FOUND));
         return cartMapper.toCartWithCustomerResponse(cart);
     }
 
@@ -183,7 +185,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void sendRemindersBatch(List<Long> cartIds) {
         if (cartIds == null || cartIds.isEmpty()) {
-            throw new RuntimeException("Danh sách giỏ hàng để gửi mail không được trống");
+            throw new InvalidParamException(ErrorCode.INVALID_PARAMETER);
         }
         List<Cart> carts = cartRepository.findCartsByIds(cartIds);
         List<Cart> sentCarts = new ArrayList<>();

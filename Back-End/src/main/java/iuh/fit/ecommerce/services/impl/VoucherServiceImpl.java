@@ -8,6 +8,7 @@ import iuh.fit.ecommerce.dtos.response.voucher.VoucherAvailableResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.enums.VoucherCustomerStatus;
 import iuh.fit.ecommerce.enums.VoucherType;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.VoucherMapper;
@@ -57,7 +58,7 @@ public class VoucherServiceImpl implements VoucherService {
 
         if (request.getVoucherType() == VoucherType.ALL && request.getCode() != null) {
             if ( voucherRepository.existsByCode(request.getCode())) {
-                throw new ConflictException("Voucher with code already exists: " + request.getCode());
+                throw new ConflictException(ErrorCode.VOUCHER_CODE_EXISTS);
             }
             voucher.setCode(request.getCode());
         }
@@ -94,7 +95,7 @@ public class VoucherServiceImpl implements VoucherService {
             try {
                 voucherType = VoucherType.valueOf(type.toUpperCase().trim());
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid voucher type: " + type + ". Must be one of: ALL, GROUP, RANK");
+                throw new IllegalArgumentException(ErrorCode.INVALID_VOUCHER_TYPE.getMessage());
             }
         }
 
@@ -139,7 +140,7 @@ public class VoucherServiceImpl implements VoucherService {
                     .anyMatch(vc -> !newCustomerIds.contains(vc.getCustomer().getId()));
 
             if (hasRemovedIssued) {
-                throw new ConflictException("Cannot remove customers who have already received the voucher");
+                throw new ConflictException(ErrorCode.VOUCHER_CANNOT_REMOVE_CUSTOMERS);
             }
 
             // Xác định danh sách hiện tại (tất cả id đã có trong DB)
@@ -188,7 +189,7 @@ public class VoucherServiceImpl implements VoucherService {
         Voucher voucher = getVoucherEntityById(id);
 
         if (!voucher.getActive()) {
-            throw new IllegalArgumentException("Voucher is not active yet, cannot send");
+            throw new IllegalArgumentException(ErrorCode.VOUCHER_NOT_ACTIVE_YET.getMessage());
         }
 
         List<VoucherCustomer> voucherCustomers = voucherCustomerRepository.findAllByVoucher_Id(id);
@@ -207,7 +208,7 @@ public class VoucherServiceImpl implements VoucherService {
     @Override
     public Voucher getVoucherEntityById(Long id) {
         return voucherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Voucher not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VOUCHER_NOT_FOUND));
     }
 
     @Override
@@ -255,7 +256,7 @@ public class VoucherServiceImpl implements VoucherService {
     @Override
     public List<VoucherAvailableResponse> getAvailableVouchersForCustomerById(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id = " + customerId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CUSTOMER_NOT_FOUND));
 
         LocalDate now = LocalDate.now();
 
@@ -300,21 +301,21 @@ public class VoucherServiceImpl implements VoucherService {
 
     private Voucher findById(Long id) {
         return voucherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Voucher not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VOUCHER_NOT_FOUND));
     }
 
     private void validateVoucherRequest(VoucherAddRequest request) {
         if (request.getVoucherType() == VoucherType.ALL) {
             if (request.getCode() == null || request.getCode().isBlank()) {
-                throw new IllegalArgumentException("Voucher type 'ALL' requires a code");
+                throw new IllegalArgumentException(ErrorCode.VOUCHER_ALL_REQUIRES_CODE.getMessage());
             }
         } else if (request.getVoucherType() == VoucherType.GROUP) {
             if (request.getVoucherCustomers() == null || request.getVoucherCustomers().isEmpty()) {
-                throw new IllegalArgumentException("Voucher type 'GROUP' requires a customer list");
+                throw new IllegalArgumentException(ErrorCode.VOUCHER_GROUP_REQUIRES_CUSTOMERS.getMessage());
             }
         } else if (request.getVoucherType() == VoucherType.RANK) {
             if (request.getRankId() == null) {
-                throw new IllegalArgumentException("Voucher type 'RANK' requires a rankId");
+                throw new IllegalArgumentException(ErrorCode.VOUCHER_RANK_REQUIRES_RANK_ID.getMessage());
             }
         }
     }

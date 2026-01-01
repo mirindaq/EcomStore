@@ -5,6 +5,7 @@ import iuh.fit.ecommerce.dtos.response.address.AddressResponse;
 import iuh.fit.ecommerce.entities.Address;
 import iuh.fit.ecommerce.entities.Customer;
 import iuh.fit.ecommerce.entities.Ward;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.AddressMapper;
 import iuh.fit.ecommerce.repositories.AddressRepository;
@@ -30,13 +31,11 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public AddressResponse addAddress(Long customerId, AddressRequest request) {
         Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CUSTOMER_NOT_FOUND));
 
         // Validate và lấy Ward theo wardId
         Ward ward = wardRepository.findById(request.getWardId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Ward not found with id: " + request.getWardId()
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.WARD_NOT_FOUND));
 
         // Kiểm tra null-safe
         List<Address> existingAddresses = customer.getAddresses();
@@ -73,18 +72,16 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public AddressResponse updateAddress(Long customerId, Long addressId, AddressRequest request) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_FOUND));
 
         // Kiểm tra ownership
         if (!address.getCustomer().getId().equals(customerId)) {
-            throw new ResourceNotFoundException("Address does not belong to this customer");
+            throw new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_BELONGS_TO_CUSTOMER);
         }
 
         // Validate ward
         Ward ward = wardRepository.findById(request.getWardId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Ward not found with id: " + request.getWardId()
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.WARD_NOT_FOUND));
 
         // Update dữ liệu
         address.setFullName(request.getFullName());
@@ -102,7 +99,7 @@ public class AddressServiceImpl implements AddressService {
             if (Boolean.TRUE.equals(address.getIsDefault())) {
                 long totalAddresses = addressRepository.countByCustomerId(customerId);
                 if (totalAddresses <= 1) {
-                    throw new IllegalStateException("Cannot remove default status from the only address");
+                    throw new IllegalStateException(ErrorCode.ADDRESS_CANNOT_REMOVE_DEFAULT.getMessage());
                 }
 
                 address.setIsDefault(false);
@@ -128,10 +125,10 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public void deleteAddress(Long customerId, Long addressId) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!address.getCustomer().getId().equals(customerId)) {
-            throw new ResourceNotFoundException("Address does not belong to this customer");
+            throw new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_BELONGS_TO_CUSTOMER);
         }
 
         boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
@@ -153,10 +150,10 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     public AddressResponse setDefaultAddress(Long customerId, Long addressId) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!address.getCustomer().getId().equals(customerId)) {
-            throw new ResourceNotFoundException("Address does not belong to this customer");
+            throw new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_BELONGS_TO_CUSTOMER);
         }
 
         if (Boolean.TRUE.equals(address.getIsDefault())) {
@@ -174,7 +171,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional(readOnly = true)
     public List<AddressResponse> getAddressesByCustomer(Long customerId) {
         if (!customerRepository.existsById(customerId)) {
-            throw new ResourceNotFoundException("Customer not found with id: " + customerId);
+            throw new ResourceNotFoundException(ErrorCode.CUSTOMER_NOT_FOUND);
         }
 
         return addressRepository.findByCustomerIdOrderByDefaultWithDetails(customerId)
@@ -187,10 +184,10 @@ public class AddressServiceImpl implements AddressService {
     @Transactional(readOnly = true)
     public AddressResponse getAddressById(Long customerId, Long addressId) {
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!address.getCustomer().getId().equals(customerId)) {
-            throw new ResourceNotFoundException("Address does not belong to this customer");
+            throw new ResourceNotFoundException(ErrorCode.ADDRESS_NOT_BELONGS_TO_CUSTOMER);
         }
 
         return addressMapper.toResponse(address);

@@ -12,6 +12,7 @@ import iuh.fit.ecommerce.entities.elasticsearch.ProductDocument;
 import iuh.fit.ecommerce.mappers.ProductMapper;
 import iuh.fit.ecommerce.repositories.ProductRepository;
 import iuh.fit.ecommerce.repositories.elasticsearch.ProductSearchRepository;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.services.ProductSearchService;
 import iuh.fit.ecommerce.services.PromotionService;
 import lombok.RequiredArgsConstructor;
@@ -294,7 +295,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
         } catch (Exception e) {
             logger.error("Search failed: {}", e.getMessage(), e);
-            throw new RuntimeException("Elasticsearch search failed: " + e.getMessage(), e);
+            throw new RuntimeException(ErrorCode.ELASTICSEARCH_SEARCH_FAILED.getMessage(), e);
         }
     }
 

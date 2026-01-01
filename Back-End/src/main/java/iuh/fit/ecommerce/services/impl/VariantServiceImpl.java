@@ -20,6 +20,7 @@ import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.variant.VariantResponse;
 import iuh.fit.ecommerce.entities.Variant;
 import iuh.fit.ecommerce.entities.VariantValue;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.VariantMapper;
 import iuh.fit.ecommerce.repositories.VariantRepository;
@@ -113,7 +114,7 @@ public class VariantServiceImpl implements VariantService {
 
     private Variant findVariantOrThrow(Long id) {
         return variantRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Variant not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.VARIANT_NOT_FOUND));
     }
 
 

@@ -10,6 +10,7 @@ import iuh.fit.ecommerce.entities.Order;
 import iuh.fit.ecommerce.entities.Product;
 import iuh.fit.ecommerce.entities.ProductVariant;
 import iuh.fit.ecommerce.enums.OrderStatus;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.FeedbackMapper;
@@ -45,27 +46,27 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         // Validate order exists and belongs to customer
         Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ORDER_NOT_FOUND));
 
         if (!order.getCustomer().getId().equals(customer.getId())) {
-            throw new InvalidParamException("Order does not belong to current customer");
+            throw new InvalidParamException(ErrorCode.FEEDBACK_ORDER_NOT_BELONGS_TO_CUSTOMER);
         }
 
         // Validate order is completed
         if (order.getStatus() != OrderStatus.COMPLETED) {
-            throw new InvalidParamException("Can only review completed orders");
+            throw new InvalidParamException(ErrorCode.FEEDBACK_ONLY_COMPLETED_ORDERS);
         }
 
         // Validate product variant exists
         ProductVariant productVariant = productVariantRepository.findById(request.getProductVariantId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_VARIANT_NOT_FOUND));
 
         // Check if already reviewed
         if (feedbackRepository.existsByOrderIdAndProductVariantIdAndCustomerId(
                 request.getOrderId(),
                 request.getProductVariantId(),
                 customer.getId())) {
-            throw new InvalidParamException("You have already reviewed this product for this order");
+            throw new InvalidParamException(ErrorCode.FEEDBACK_ALREADY_EXISTS);
         }
 
         // Verify product is in order
@@ -73,7 +74,7 @@ public class FeedbackServiceImpl implements FeedbackService {
                 .anyMatch(od -> od.getProductVariant().getId().equals(request.getProductVariantId()));
 
         if (!productInOrder) {
-            throw new InvalidParamException("Product variant is not in this order");
+            throw new InvalidParamException(ErrorCode.FEEDBACK_PRODUCT_NOT_IN_ORDER);
         }
 
         // Create feedback
@@ -124,7 +125,7 @@ public class FeedbackServiceImpl implements FeedbackService {
                 orderId,
                 productVariantId,
                 customer.getId()
-        ).orElseThrow(() -> new ResourceNotFoundException("Feedback not found"));
+        ).orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND));
 
         return feedbackMapper.toResponse(feedback);
     }

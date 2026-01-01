@@ -7,6 +7,7 @@ import iuh.fit.ecommerce.dtos.response.banner.BannerResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.entities.Banner;
 import iuh.fit.ecommerce.entities.Staff;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.BannerMapper;
 import iuh.fit.ecommerce.repositories.BannerRepository;
@@ -68,7 +69,7 @@ public class BannerServiceImpl implements BannerService {
 
     private Banner getBannerEntityById(Long id) {
         return bannerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Banner not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.BANNER_NOT_FOUND));
     }
 
 

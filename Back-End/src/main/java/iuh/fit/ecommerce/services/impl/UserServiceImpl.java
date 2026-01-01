@@ -2,6 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 
 import iuh.fit.ecommerce.entities.User;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.repositories.UserRepository;
 import iuh.fit.ecommerce.services.UserService;
@@ -17,6 +18,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserEntityById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(()->new ResourceNotFoundException("User not found with id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 }

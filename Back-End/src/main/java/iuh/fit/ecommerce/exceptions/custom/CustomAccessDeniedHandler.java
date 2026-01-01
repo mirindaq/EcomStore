@@ -2,6 +2,7 @@ package iuh.fit.ecommerce.exceptions.custom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iuh.fit.ecommerce.dtos.response.base.ResponseError;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,12 +18,13 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
         ResponseError error = ResponseError.builder()
                 .timestamp(new Date())
-                .status(HttpServletResponse.SC_FORBIDDEN)
-                .error("Forbidden")
+                .status(errorCode.getHttpStatus().value())
+                .error(errorCode.getHttpStatus().getReasonPhrase())
                 .path(request.getRequestURI())
-                .message("Access denied. You don't have the required role.")
+                .message(errorCode.getMessage())
                 .build();
 
         response.setContentType("application/json");

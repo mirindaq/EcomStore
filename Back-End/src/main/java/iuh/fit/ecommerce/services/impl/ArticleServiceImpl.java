@@ -6,6 +6,7 @@ import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.entities.Article;
 import iuh.fit.ecommerce.entities.ArticleCategory;
 import iuh.fit.ecommerce.entities.Staff;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ArticleMapper;
@@ -44,21 +45,19 @@ public class ArticleServiceImpl implements ArticleService {
 
         // Kiểm tra trùng title
         if (articleRepository.existsByTitle(articleAddRequest.getTitle())) {
-            throw new ConflictException("Article already exists with title: " + articleAddRequest.getTitle());
+            throw new ConflictException(ErrorCode.ARTICLE_TITLE_EXISTS);
         }
 
         // Kiểm tra category hợp lệ
         ArticleCategory category = articleCategoryRepository.findById(articleAddRequest.getArticleCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Article category not found with ID: " + articleAddRequest.getArticleCategoryId()
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_CATEGORY_NOT_FOUND));
 
         // Tạo slug
         String slug = StringUtils.normalizeString(articleAddRequest.getTitle());
 
         // Kiểm tra trùng slug
         if (articleRepository.findBySlug(slug).isPresent()) {
-            throw new ConflictException("Article already exists with slug: " + slug);
+            throw new ConflictException(ErrorCode.ARTICLE_SLUG_EXISTS);
         }
 
         // Tạo Article entity
@@ -171,9 +170,7 @@ public class ArticleServiceImpl implements ArticleService {
         Staff staff = securityUtils.getCurrentStaff();
 
         ArticleCategory category = articleCategoryRepository.findById(articleAddRequest.getArticleCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Article category not found with ID: " + articleAddRequest.getArticleCategoryId()
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_CATEGORY_NOT_FOUND));
 
         article.setTitle(articleAddRequest.getTitle());
         article.setThumbnail(articleAddRequest.getThumbnail());
@@ -208,11 +205,11 @@ public class ArticleServiceImpl implements ArticleService {
      */
     private Article findById(Long id) {
         return articleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Article not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_NOT_FOUND));
     }
 
     private Article findBySlug(String slug) {
         return articleRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Article not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_SLUG_NOT_FOUND));
     }
 }

@@ -7,6 +7,7 @@ import iuh.fit.ecommerce.dtos.response.address.AddressResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
 import iuh.fit.ecommerce.dtos.response.customer.CustomerResponse;
 import iuh.fit.ecommerce.entities.*;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.CustomerMapper;
 import iuh.fit.ecommerce.repositories.*;
@@ -44,7 +45,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public CustomerResponse createCustomer(CustomerAddRequest request) {
         Role role = roleRepository.findByName("CUSTOMER")
-                .orElseThrow(() -> new RuntimeException("Role CUSTOMER not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROLE_NOT_FOUND));
         Customer customer = customerMapper.toCustomer(request);
         customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         customer.setActive(true);
@@ -125,13 +126,13 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer getCustomerEntityById(Long id) {
         return customerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id = " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CUSTOMER_NOT_FOUND));
     }
 
     @Override
     public Customer getCustomerEntityByEmail(String email) {
         return customerRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with email = " + email));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CUSTOMER_NOT_FOUND));
     }
 
     @Override

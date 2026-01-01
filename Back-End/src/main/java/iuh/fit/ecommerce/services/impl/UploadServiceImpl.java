@@ -2,6 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import io.minio.*;
 import iuh.fit.ecommerce.dtos.request.upload.UploadRequest;
+import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +68,7 @@ public class UploadServiceImpl implements UploadService {
                     return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
                 } catch (Exception e) {
                     log.error("Lỗi khi upload file: {}", e.getMessage());
-                    throw new RuntimeException("Lỗi khi upload file: " + e.getMessage(), e);
+                    throw new RuntimeException(ErrorCode.UPLOAD_FAILED.getMessage(), e);
                 }
             });
             futures.add(future);
@@ -77,7 +78,7 @@ public class UploadServiceImpl implements UploadService {
             try {
                 savedFileUrls.add(future.get());
             } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException("Lỗi khi xử lý upload: " + e.getMessage(), e);
+                throw new RuntimeException(ErrorCode.UPLOAD_FAILED.getMessage(), e);
             }
         }
 
@@ -99,7 +100,7 @@ public class UploadServiceImpl implements UploadService {
                                 .build()
                 );
             } catch (Exception e) {
-                throw new ResourceNotFoundException("File không tồn tại: " + objectName);
+                throw new ResourceNotFoundException(ErrorCode.UPLOAD_FILE_NOT_FOUND);
             }
 
             minioClient.removeObject(
@@ -113,13 +114,13 @@ public class UploadServiceImpl implements UploadService {
             throw e;
         } catch (Exception e) {
             log.error("Lỗi khi xóa file: {}", e.getMessage());
-            throw new RuntimeException("Lỗi khi xóa file: " + e.getMessage(), e);
+            throw new RuntimeException(ErrorCode.DELETE_FILE_FAILED.getMessage(), e);
         }
     }
 
     private String extractObjectName(String fileNameOrUrl) {
         if (fileNameOrUrl == null || fileNameOrUrl.trim().isEmpty()) {
-            throw new InvalidParamException("Tên file không được để trống");
+            throw new InvalidParamException(ErrorCode.UPLOAD_FILENAME_EMPTY);
         }
 
         if (fileNameOrUrl.startsWith("http://") || fileNameOrUrl.startsWith("https://")) {
@@ -140,19 +141,19 @@ public class UploadServiceImpl implements UploadService {
 
     private void validateFile(List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách file không được null hoặc rỗng");
+            throw new IllegalArgumentException(ErrorCode.UPLOAD_FILE_LIST_EMPTY.getMessage());
         }
 
         List<String> allowedExtensions = Arrays.asList(".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif");
 
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) {
-                throw new IllegalArgumentException("File không được null hoặc rỗng");
+                throw new IllegalArgumentException(ErrorCode.UPLOAD_FILE_NULL.getMessage());
             }
 
             String fileName = file.getOriginalFilename();
             if (fileName == null || fileName.trim().isEmpty()) {
-                throw new IllegalArgumentException("Tên file không được null hoặc rỗng");
+                throw new IllegalArgumentException(ErrorCode.UPLOAD_FILENAME_NULL.getMessage());
             }
 
             String lowerCaseFileName = fileName.toLowerCase();
