@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.request.article.ArticleAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleResponse;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.entities.Article;
 import iuh.fit.ecommerce.entities.ArticleCategory;
 import iuh.fit.ecommerce.entities.Staff;
@@ -12,7 +12,6 @@ import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ArticleMapper;
 import iuh.fit.ecommerce.repositories.ArticleCategoryRepository;
 import iuh.fit.ecommerce.repositories.ArticleRepository;
-import iuh.fit.ecommerce.repositories.StaffRepository;
 import iuh.fit.ecommerce.services.ArticleService;
 import iuh.fit.ecommerce.utils.SecurityUtils;
 import iuh.fit.ecommerce.utils.StringUtils;
@@ -78,7 +77,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseWithPagination<List<ArticleResponse>> getAllArticlesForCustomer(
+    public PageResponse<ArticleResponse> getAllArticlesForCustomer(
             int page, int limit, String title, Long categoryId, LocalDate createdDate) {
 
         page = Math.max(page - 1, 0);
@@ -90,8 +89,8 @@ public class ArticleServiceImpl implements ArticleService {
                 .map(articleMapper::toResponse)
                 .toList();
 
-        return ResponseWithPagination.<List<ArticleResponse>>builder()
-                .data(responses)
+        return PageResponse.<ArticleResponse>builder()
+                .items(responses)
                 .page(page + 1)
                 .limit(limit)
                 .totalItem((int) articlePage.getTotalElements())
@@ -101,7 +100,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseWithPagination<List<ArticleResponse>> getAllArticlesForAdmin(
+    public PageResponse<ArticleResponse> getAllArticlesForAdmin(
             int page, int limit, Boolean status, String title, Long categoryId, LocalDate createdDate) {
 
         page = Math.max(page - 1, 0);
@@ -112,8 +111,8 @@ public class ArticleServiceImpl implements ArticleService {
                 .map(articleMapper::toResponse)
                 .toList();
 
-        return ResponseWithPagination.<List<ArticleResponse>>builder()
-                .data(responses)
+        return PageResponse.<ArticleResponse>builder()
+                .items(responses)
                 .page(page + 1)
                 .limit(limit)
                 .totalItem((int) articlePage.getTotalElements())

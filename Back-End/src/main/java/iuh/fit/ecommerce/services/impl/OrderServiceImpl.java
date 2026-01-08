@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.services.impl;
 import iuh.fit.ecommerce.dtos.request.order.OrderCreationRequest;
 import iuh.fit.ecommerce.dtos.request.order.StaffOrderCreationRequest;
 import iuh.fit.ecommerce.dtos.request.order.StaffOrderItem;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.order.OrderResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.enums.OrderStatus;
@@ -233,7 +233,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public ResponseWithPagination<List<OrderResponse>> getMyOrders(int page, int size, List<String> status, String startDate, String endDate) {
+    public PageResponse<OrderResponse> getMyOrders(int page, int size, List<String> status, String startDate, String endDate) {
         page = Math.max(page - 1, 0);
         Pageable pageable = PageRequest.of(page, size);
         Customer customer = securityUtils.getCurrentCustomer();
@@ -261,7 +261,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Page<Order> ordersPage = orderRepository.findMyOrders(customer, orderStatuses, start, endDt, pageable);
-        return ResponseWithPagination.fromPage(ordersPage, orderMapper::toResponse);
+        return PageResponse.fromPage(ordersPage, orderMapper::toResponse);
     }
 
     public Order findById(Long id) {
@@ -465,7 +465,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ResponseWithPagination<List<OrderResponse>> getAllOrdersForAdmin(
+    public PageResponse<OrderResponse> getAllOrdersForAdmin(
             String customerName,
             LocalDate orderDate,
             String customerPhone,
@@ -482,7 +482,7 @@ public class OrderServiceImpl implements OrderService {
                 pageable
         );
 
-        return ResponseWithPagination.fromPage(orderPage, orderMapper::toResponse);
+        return PageResponse.fromPage(orderPage, orderMapper::toResponse);
     }
 
     @Override
@@ -634,7 +634,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public ResponseWithPagination<List<OrderResponse>> getOrdersNeedShipper(int page, int size) {
+    public PageResponse<OrderResponse> getOrdersNeedShipper(int page, int size) {
         page = Math.max(page - 1, 0);
         Pageable pageable = PageRequest.of(page, size);
 
@@ -643,7 +643,7 @@ public class OrderServiceImpl implements OrderService {
                 pageable
         );
 
-        return ResponseWithPagination.fromPage(orderPage, orderMapper::toResponse);
+        return PageResponse.fromPage(orderPage, orderMapper::toResponse);
     }
 
     private void sendOrderStatusNotification(Order order, OrderStatus status, String title, String body) {

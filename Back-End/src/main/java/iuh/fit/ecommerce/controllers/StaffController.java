@@ -4,7 +4,7 @@ import iuh.fit.ecommerce.dtos.excel.ImportResult;
 import iuh.fit.ecommerce.dtos.request.staff.StaffAddRequest;
 import iuh.fit.ecommerce.dtos.request.staff.StaffUpdateRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.staff.StaffResponse;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
@@ -36,7 +36,7 @@ public class StaffController {
         private final StaffExcelService staffExcelService;
 
         @GetMapping("")
-        public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<StaffResponse>>>> getStaffs(
+        public ResponseEntity<ResponseSuccess<PageResponse<StaffResponse>>> getStaffs(
                 @RequestParam(defaultValue = "1") int page,
                 @RequestParam(defaultValue = "7") int size,
                 @RequestParam(required = false) String staffName,

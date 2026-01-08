@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.controllers;
 import iuh.fit.ecommerce.dtos.request.promotion.PromotionAddRequest;
 import iuh.fit.ecommerce.dtos.request.promotion.PromotionUpdateRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.promotion.PromotionResponse;
 import iuh.fit.ecommerce.services.PromotionService;
 import jakarta.validation.Valid;
@@ -45,7 +45,7 @@ public class PromotionController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<PromotionResponse>>>> getAllPromotions(
+    public ResponseEntity<ResponseSuccess<PageResponse<PromotionResponse>>> getAllPromotions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int limit,
             @RequestParam(required = false) String name,

@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.services.impl;
 import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
 import iuh.fit.ecommerce.entities.Product;
 import iuh.fit.ecommerce.entities.ProductImage;
@@ -53,7 +53,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     private final PromotionService promotionService;
 
     @Override
-    public ResponseWithPagination<List<ProductResponse>> searchProducts(
+    public PageResponse<ProductResponse> searchProducts(
             String query,
             int page,
             int size,
@@ -228,8 +228,8 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             logger.debug("Found {} product IDs from Elasticsearch", productIds.size());
 
             if (productIds.isEmpty()) {
-                return ResponseWithPagination.<List<ProductResponse>>builder()
-                        .data(new ArrayList<>())
+                return PageResponse.<ProductResponse>builder()
+                        .items(new ArrayList<>())
                         .page(page + 1)
                         .limit(size)
                         .totalItem(0)
@@ -285,8 +285,8 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             long totalItem = searchHits.getTotalHits();
             int totalPages = (int) Math.ceil((double) totalItem / size);
 
-            return ResponseWithPagination.<List<ProductResponse>>builder()
-                    .data(productResponses)
+            return PageResponse.<ProductResponse>builder()
+                    .items(productResponses)
                     .page(page + 1)
                     .limit(size)
                     .totalItem(totalItem)

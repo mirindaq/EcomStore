@@ -3,14 +3,13 @@ package iuh.fit.ecommerce.controllers;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.ecommerce.dtos.request.purchaseOrder.PurchaseOrderRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.purchaseOrder.PurchaseOrderResponse;
 import iuh.fit.ecommerce.services.PurchaseOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -39,7 +38,7 @@ public class PurchaseOrderController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<PurchaseOrderResponse>>>> getAllPurchaseOrders(
+    public ResponseEntity<ResponseSuccess<PageResponse<PurchaseOrderResponse>>> getAllPurchaseOrders(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String supplierId,

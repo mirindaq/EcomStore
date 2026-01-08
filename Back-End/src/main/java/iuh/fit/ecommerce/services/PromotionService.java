@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.promotion.PromotionAddRequest;
 import iuh.fit.ecommerce.dtos.request.promotion.PromotionUpdateRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
 import iuh.fit.ecommerce.dtos.response.promotion.PromotionResponse;
 import iuh.fit.ecommerce.entities.Product;
@@ -16,7 +16,7 @@ import java.util.Map;
 public interface PromotionService {
     PromotionResponse createPromotion(PromotionAddRequest request);
     PromotionResponse getPromotionById(Long id);
-    ResponseWithPagination<List<PromotionResponse>> getAllPromotions(
+    PageResponse<PromotionResponse> getAllPromotions(
             int page, int limit,
             String name, String type,
             Boolean active,

@@ -1,6 +1,5 @@
 package iuh.fit.ecommerce.dtos.response.base;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,18 +15,19 @@ import java.util.function.Function;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-public class ResponseWithPagination<T> {
-    private T data;
+public class PageResponse<T> {
+    private List<T> items;
     private int page;
     private int totalPage;
     private int limit;
     private long totalItem;
 
-    public static <E, R> ResponseWithPagination<List<R>> fromPage(Page<E> page,
-                                                                  Function<E, R> mapper) {
-        return ResponseWithPagination.<List<R>>builder()
-                .data(page.getContent().stream().map(mapper).toList())
+    public static <E, R> PageResponse<R> fromPage(
+            Page<E> page,
+            Function<E, R> mapper
+    ) {
+        return PageResponse.<R>builder()
+                .items(page.getContent().stream().map(mapper).toList())
                 .page(page.getNumber() + 1)
                 .totalPage(page.getTotalPages())
                 .limit(page.getSize())

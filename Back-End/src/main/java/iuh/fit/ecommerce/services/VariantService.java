@@ -1,7 +1,7 @@
 package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.variant.VariantAddRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.variant.VariantResponse;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.List;
 public interface VariantService {
     VariantResponse createVariant(VariantAddRequest request);
 
-    ResponseWithPagination<List<VariantResponse>> getVariants(int page, int size, String variantName);
+    PageResponse<VariantResponse> getVariants(int page, int size, String variantName);
 
     VariantResponse getVariantById(Long id);
 

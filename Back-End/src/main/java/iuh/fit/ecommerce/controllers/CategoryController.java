@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import iuh.fit.ecommerce.dtos.request.category.CategoryAddRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.category.CategoryResponse;
 import iuh.fit.ecommerce.services.CategoryService;
 
@@ -23,7 +23,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<CategoryResponse>>>> getCategories(
+    public ResponseEntity<ResponseSuccess<PageResponse<CategoryResponse>>> getCategories(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int size,
             @RequestParam(required = false ) String categoryName
@@ -36,7 +36,7 @@ public class CategoryController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<CategoryResponse>>>> getAllCategories() {
+    public ResponseEntity<ResponseSuccess<PageResponse<CategoryResponse>>> getAllCategories() {
         return ResponseEntity.ok(new ResponseSuccess<>(
                 OK,
                 "Get all categories success",

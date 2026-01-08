@@ -7,7 +7,7 @@ import iuh.fit.ecommerce.dtos.request.customer.CustomerProfileRequest;
 import iuh.fit.ecommerce.dtos.request.customer.UpdatePushTokenRequest;
 import iuh.fit.ecommerce.dtos.response.address.AddressResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.customer.CustomerResponse;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
@@ -56,7 +56,7 @@ public class CustomerController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<CustomerResponse>>>> getAllCustomers(
+    public ResponseEntity<ResponseSuccess<PageResponse<CustomerResponse>>> getAllCustomers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int limit,
             @RequestParam(required = false) String name,

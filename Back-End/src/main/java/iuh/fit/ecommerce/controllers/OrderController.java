@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.controllers;
 import iuh.fit.ecommerce.dtos.request.order.OrderCreationRequest;
 import iuh.fit.ecommerce.dtos.request.order.StaffOrderCreationRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.order.OrderResponse;
 import iuh.fit.ecommerce.enums.OrderStatus;
 import iuh.fit.ecommerce.services.OrderService;
@@ -38,7 +38,7 @@ public class OrderController {
     }
 
     @GetMapping("/my-orders")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<OrderResponse>>>> getMyOrders(
+    public ResponseEntity<ResponseSuccess<PageResponse<OrderResponse>>> getMyOrders(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int size,
             @RequestParam(required = false) List<String> status,
@@ -53,7 +53,7 @@ public class OrderController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<OrderResponse>>>> getAllOrdersForAdmin(
+    public ResponseEntity<ResponseSuccess<PageResponse<OrderResponse>>> getAllOrdersForAdmin(
             @RequestParam(required = false) String customerName,
             @RequestParam(required = false) LocalDate orderDate,
             @RequestParam(required = false) String customerPhone,
@@ -116,7 +116,7 @@ public class OrderController {
 
     @GetMapping("/need-shipper")
     @PreAuthorize("hasRole('STAFF')")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<OrderResponse>>>> getOrdersNeedShipper(
+    public ResponseEntity<ResponseSuccess<PageResponse<OrderResponse>>> getOrdersNeedShipper(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {

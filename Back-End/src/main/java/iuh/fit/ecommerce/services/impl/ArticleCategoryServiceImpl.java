@@ -1,11 +1,7 @@
 package iuh.fit.ecommerce.services.impl;
 
-import iuh.fit.ecommerce.configurations.CacheConfig;
 import iuh.fit.ecommerce.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.ecommerce.dtos.request.article.ArticleCategoryAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleCategoryResponse;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.entities.ArticleCategory;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
@@ -100,13 +96,13 @@ public class ArticleCategoryServiceImpl implements ArticleCategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseWithPagination<List<ArticleCategoryResponse>> getAllCategories(int page, int limit, String title) {
+    public PageResponse<ArticleCategoryResponse> getAllCategories(int page, int limit, String title) {
         page = page > 0 ? page - 1 : page;
         Pageable pageable = PageRequest.of(page, limit);
 
         Page<ArticleCategory> categoryPage = articleCategoryRepository.searchCategories(title, pageable);
 
-        return ResponseWithPagination.fromPage(categoryPage, articleCategoryMapper::toResponse);
+        return PageResponse.fromPage(categoryPage, articleCategoryMapper::toResponse);
     }
 
 

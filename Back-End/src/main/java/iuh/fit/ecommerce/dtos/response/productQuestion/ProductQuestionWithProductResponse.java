@@ -15,7 +15,6 @@ public class ProductQuestionWithProductResponse {
     private String userName;
     private List<ProductQuestionAnswerResponse> answers;
 
-    // Product info
     private Long productId;
     private String productName;
     private String productSlug;

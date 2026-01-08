@@ -1,7 +1,7 @@
 package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.supplier.SupplierRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.supplier.SupplierResponse;
 import iuh.fit.ecommerce.entities.Supplier; // Thêm import
 
@@ -14,7 +14,7 @@ public interface SupplierService {
 
     SupplierResponse getSupplierById(Long id);
 
-    ResponseWithPagination<List<SupplierResponse>> getSuppliers(
+    PageResponse<SupplierResponse> getSuppliers(
             int page, int size,
             String name, String phone, String address, Boolean status,
             LocalDate startDate, LocalDate endDate

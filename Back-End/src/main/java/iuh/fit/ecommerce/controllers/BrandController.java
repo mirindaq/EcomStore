@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import iuh.fit.ecommerce.dtos.request.brand.BrandAddRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.brand.BrandResponse;
 import iuh.fit.ecommerce.services.BrandService;
 
@@ -23,7 +23,7 @@ public class BrandController {
     private final BrandService brandService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<BrandResponse>>>> getBrands(
+    public ResponseEntity<ResponseSuccess<PageResponse<BrandResponse>>> getBrands(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int size,
             @RequestParam(required = false ) String brandName
@@ -36,7 +36,7 @@ public class BrandController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<BrandResponse>>>> getAllBrands() {
+    public ResponseEntity<ResponseSuccess<PageResponse<BrandResponse>>> getAllBrands() {
         return ResponseEntity.ok(new ResponseSuccess<>(
                 OK,
                 "Get all brands success",

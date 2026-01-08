@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.controllers;
 import iuh.fit.ecommerce.dtos.excel.ImportResult;
 import iuh.fit.ecommerce.dtos.request.supplier.SupplierRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.supplier.SupplierResponse;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
@@ -39,7 +39,7 @@ public class SupplierController {
      * API Lấy danh sách nhà cung cấp (có phân trang và tìm kiếm)
      */
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<SupplierResponse>>>> getSuppliers(
+    public ResponseEntity<ResponseSuccess<PageResponse<SupplierResponse>>> getSuppliers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String name,

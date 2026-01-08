@@ -1,11 +1,7 @@
 package iuh.fit.ecommerce.services.impl;
 
-import iuh.fit.ecommerce.configurations.CacheConfig;
 import iuh.fit.ecommerce.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.ecommerce.dtos.request.category.AttributeAddRequest;
 import iuh.fit.ecommerce.dtos.request.category.CategoryAddRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.category.CategoryResponse;
 import iuh.fit.ecommerce.entities.Attribute;
 import iuh.fit.ecommerce.entities.Category;
@@ -51,7 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    public ResponseWithPagination<List<CategoryResponse>> getCategories(int page, int size, String categoryName) {
+    public PageResponse<CategoryResponse> getCategories(int page, int size, String categoryName) {
 
         page = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(page, size);
@@ -62,7 +58,7 @@ public class CategoryServiceImpl implements CategoryService {
         } else {
             categoryPage = categoryRepository.findAll(pageable);
         }
-        return ResponseWithPagination.fromPage(categoryPage,categoryMapper::toResponse);
+        return PageResponse.fromPage(categoryPage,categoryMapper::toResponse);
     }
 
     @Override

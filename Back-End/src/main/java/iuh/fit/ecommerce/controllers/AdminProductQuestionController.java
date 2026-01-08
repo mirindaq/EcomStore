@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.controllers;
 
 import iuh.fit.ecommerce.dtos.request.productQuestion.ProductQuestionUpdateStatusRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionWithProductResponse;
 import iuh.fit.ecommerce.services.ProductQuestionService;
 import jakarta.validation.Valid;
@@ -24,7 +24,7 @@ public class AdminProductQuestionController {
     private final ProductQuestionService productQuestionService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ProductQuestionWithProductResponse>>>> getAllProductQuestions(
+    public ResponseEntity<ResponseSuccess<PageResponse<ProductQuestionWithProductResponse>>> getAllProductQuestions(
             @RequestParam(defaultValue = "1", required = false) int page,
             @RequestParam(defaultValue = "10", required = false) int size,
             @RequestParam(required = false) Boolean status,

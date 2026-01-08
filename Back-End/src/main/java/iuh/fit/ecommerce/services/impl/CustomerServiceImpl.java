@@ -4,7 +4,7 @@ import iuh.fit.ecommerce.dtos.request.address.AddressRequest;
 import iuh.fit.ecommerce.dtos.request.customer.CustomerAddRequest;
 import iuh.fit.ecommerce.dtos.request.customer.CustomerProfileRequest;
 import iuh.fit.ecommerce.dtos.response.address.AddressResponse;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.customer.CustomerResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
@@ -22,10 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -82,13 +79,13 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional
-    public ResponseWithPagination<List<CustomerResponse>> getAllCustomers(int page, int limit, String name,
-             String phone, String email, Boolean status, LocalDate startDate, LocalDate endDate, String rank ) {
+    public PageResponse<CustomerResponse> getAllCustomers(int page, int limit, String name,
+                                                                String phone, String email, Boolean status, LocalDate startDate, LocalDate endDate, String rank ) {
         page = page > 0 ? page - 1 : page;
         Pageable pageable = PageRequest.of(page, limit);
 
         Page<Customer> customerPage = customerRepository.searchCustomers(name, phone, email, status, startDate, endDate,rank, pageable);
-        return ResponseWithPagination.fromPage(customerPage, customerMapper::toResponse);
+        return PageResponse.fromPage(customerPage, customerMapper::toResponse);
     }
 
 

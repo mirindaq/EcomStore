@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.request.promotion.PromotionAddRequest;
 import iuh.fit.ecommerce.dtos.request.promotion.PromotionUpdateRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantResponse;
 import iuh.fit.ecommerce.dtos.response.promotion.PromotionResponse;
@@ -25,7 +25,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,9 +67,9 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public ResponseWithPagination<List<PromotionResponse>> getAllPromotions(int page, int limit, String name,
-                                                                            String type, Boolean active,
-                                                                            LocalDate startDate, Integer priority) {
+    public PageResponse<PromotionResponse> getAllPromotions(int page, int limit, String name,
+                                                                  String type, Boolean active,
+                                                                  LocalDate startDate, Integer priority) {
         page = page > 0 ? page - 1 : page;
         Pageable pageable = PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
 
@@ -90,7 +89,7 @@ public class PromotionServiceImpl implements PromotionService {
 
         Page<Promotion> promotionPage = promotionRepository.findAll(spec, pageable);
 
-        return ResponseWithPagination.fromPage(promotionPage, promotionMapper::toResponse);
+        return PageResponse.fromPage(promotionPage, promotionMapper::toResponse);
     }
 
     @Override

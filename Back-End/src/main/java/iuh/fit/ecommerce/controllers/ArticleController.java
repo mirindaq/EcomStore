@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import iuh.fit.ecommerce.dtos.request.article.ArticleAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.services.ArticleService;
 
 import java.time.LocalDate;
@@ -55,7 +55,7 @@ public class ArticleController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ArticleResponse>>>> getAllArticlesForCustomer(
+    public ResponseEntity<ResponseSuccess<PageResponse<ArticleResponse>>> getAllArticlesForCustomer(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int limit,
             @RequestParam(required = false) String title,
@@ -71,7 +71,7 @@ public class ArticleController {
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ArticleResponse>>>> getAllArticlesForAdmin(
+    public ResponseEntity<ResponseSuccess<PageResponse<ArticleResponse>>> getAllArticlesForAdmin(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int limit,
             @RequestParam(required = false) Boolean status,

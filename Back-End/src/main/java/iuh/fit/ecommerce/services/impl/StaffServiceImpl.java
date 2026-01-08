@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.request.staff.StaffAddRequest;
 import iuh.fit.ecommerce.dtos.request.staff.StaffUpdateRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.staff.StaffResponse;
 import iuh.fit.ecommerce.entities.Role;
 import iuh.fit.ecommerce.entities.Staff;
@@ -52,7 +52,7 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseWithPagination<List<StaffResponse>> getStaffs(
+    public PageResponse<StaffResponse> getStaffs(
             int page,
             int size,
             String staffName,
@@ -96,7 +96,7 @@ public class StaffServiceImpl implements StaffService {
             }
         }
 
-        return ResponseWithPagination.fromPage(staffPage, staffMapper::toResponse);
+        return PageResponse.fromPage(staffPage, staffMapper::toResponse);
     }
 
 

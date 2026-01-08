@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.staff.StaffAddRequest;
 import iuh.fit.ecommerce.dtos.request.staff.StaffUpdateRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.staff.StaffResponse;
 import iuh.fit.ecommerce.entities.Staff;
 
@@ -12,7 +12,7 @@ import java.util.List;
 public interface StaffService {
     StaffResponse createStaff(StaffAddRequest staffAddRequest);
 
-    ResponseWithPagination<List<StaffResponse>> getStaffs(
+    PageResponse<StaffResponse> getStaffs(
             int page,
             int size,
             String staffName,

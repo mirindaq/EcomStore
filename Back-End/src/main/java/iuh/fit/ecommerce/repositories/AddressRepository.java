@@ -16,7 +16,6 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
     @Query("UPDATE Address a SET a.isDefault = false WHERE a.customer.id = :customerId")
     void clearDefaultAddress(@Param("customerId") Long customerId);
 
-    // Tránh N+1: load luôn ward + province
     @Query("""
             SELECT a FROM Address a
             JOIN FETCH a.ward w

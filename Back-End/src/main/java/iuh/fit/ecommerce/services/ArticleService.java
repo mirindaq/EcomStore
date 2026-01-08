@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.article.ArticleAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleResponse;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,16 +19,16 @@ public interface ArticleService {
 
     ArticleResponse updateArticle(Long id, ArticleAddRequest articleAddRequest);
 
-    ResponseWithPagination<List<ArticleResponse>> getAllArticlesForCustomer(int page, int limit,
-                                                                            String title,
-                                                                            Long categoryId,
-                                                                            LocalDate createdDate);
+    PageResponse<ArticleResponse> getAllArticlesForCustomer(int page, int limit,
+                                                                  String title,
+                                                                  Long categoryId,
+                                                                  LocalDate createdDate);
 
-    ResponseWithPagination<List<ArticleResponse>> getAllArticlesForAdmin(int page, int limit,
-                                                                         Boolean status,
-                                                                         String title,
-                                                                         Long categoryId,
-                                                                         LocalDate createdDate);
+    PageResponse<ArticleResponse> getAllArticlesForAdmin(int page, int limit,
+                                                               Boolean status,
+                                                               String title,
+                                                               Long categoryId,
+                                                               LocalDate createdDate);
 
     void changeStatusArticle(Long id);
 }

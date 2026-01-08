@@ -2,8 +2,7 @@ package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.productQuestion.ProductQuestionAddRequest;
 import iuh.fit.ecommerce.dtos.request.productQuestion.ProductQuestionAnswerAddRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
-import iuh.fit.ecommerce.dtos.response.category.CategoryResponse;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionResponse;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionWithProductResponse;
 import jakarta.transaction.Transactional;
@@ -14,12 +13,12 @@ import java.util.List;
 public interface ProductQuestionService {
     ProductQuestionResponse createProductQuestion(@Valid ProductQuestionAddRequest request);
 
-    ResponseWithPagination<List<ProductQuestionResponse>> getProductQuestionsByProductSlug(String slug, int page, int size);
+    PageResponse<ProductQuestionResponse> getProductQuestionsByProductSlug(String slug, int page, int size);
 
     ProductQuestionResponse createProductQuestionAnswer(@Valid ProductQuestionAnswerAddRequest request);
 
 
-    ResponseWithPagination<List<ProductQuestionWithProductResponse>> getAllProductQuestionsForAdmin(
+    PageResponse<ProductQuestionWithProductResponse> getAllProductQuestionsForAdmin(
             int page, int size, Boolean status, String search, Long productId, String sortBy, String sortOrder);
 
     @Transactional

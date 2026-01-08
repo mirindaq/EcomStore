@@ -1,19 +1,15 @@
 package iuh.fit.ecommerce.services.impl;
 
-import iuh.fit.ecommerce.configurations.CacheConfig;
 import iuh.fit.ecommerce.services.CategoryBrandService;
 import iuh.fit.ecommerce.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.ecommerce.dtos.request.brand.BrandAddRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.brand.BrandResponse;
 import iuh.fit.ecommerce.entities.Brand;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
@@ -46,7 +42,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public ResponseWithPagination<List<BrandResponse>> getBrands(int page, int size, String brandName) {
+    public PageResponse<BrandResponse> getBrands(int page, int size, String brandName) {
         page = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(page, size);
         Page<Brand> brandPage ;
@@ -56,7 +52,7 @@ public class BrandServiceImpl implements BrandService {
         } else {
             brandPage = brandRepository.findAll(pageable);
         }
-        return ResponseWithPagination.fromPage(brandPage, brandMapper::toResponse);
+        return PageResponse.fromPage(brandPage, brandMapper::toResponse);
     }
 
     @Override

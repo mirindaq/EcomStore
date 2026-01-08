@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.controllers;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import iuh.fit.ecommerce.dtos.request.product.ProductVariantPromotionRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantDescriptionResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantPromotionResponse;
@@ -43,7 +43,7 @@ public class ProductController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ProductResponse>>>> getAllProducts(
+    public ResponseEntity<ResponseSuccess<PageResponse<ProductResponse>>> getAllProducts(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int size,
             @RequestParam(required = false) String keyword,
@@ -123,7 +123,7 @@ public class ProductController {
     }
 
     @GetMapping("/search/{categorySlug}")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ProductResponse>>>> searchProductByCategory(
+    public ResponseEntity<ResponseSuccess<PageResponse<ProductResponse>>> searchProductByCategory(
             @PathVariable String categorySlug,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
@@ -141,7 +141,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ProductResponse>>>> searchProductsWithElasticsearch(
+    public ResponseEntity<ResponseSuccess<PageResponse<ProductResponse>>> searchProductsWithElasticsearch(
             @RequestParam String query,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,

@@ -4,7 +4,7 @@ import iuh.fit.ecommerce.dtos.request.banner.BannerAddRequest;
 import iuh.fit.ecommerce.dtos.request.banner.BannerUpdateRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
 import iuh.fit.ecommerce.dtos.response.banner.BannerResponse;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.services.BannerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class BannerController {
 
     @GetMapping("")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<BannerResponse>>>> getAllBanners(
+    public ResponseEntity<ResponseSuccess<PageResponse<BannerResponse>>> getAllBanners(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int size,
             @RequestParam(required = false) LocalDate startDate,

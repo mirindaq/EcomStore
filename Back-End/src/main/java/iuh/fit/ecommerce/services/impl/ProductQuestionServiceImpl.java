@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.request.productQuestion.ProductQuestionAddRequest;
 import iuh.fit.ecommerce.dtos.request.productQuestion.ProductQuestionAnswerAddRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionResponse;
 import iuh.fit.ecommerce.dtos.response.productQuestion.ProductQuestionWithProductResponse;
 import iuh.fit.ecommerce.entities.*;
@@ -51,7 +51,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
     }
 
     @Override
-    public ResponseWithPagination<List<ProductQuestionResponse>> getProductQuestionsByProductSlug(String slug, int page, int size) {
+    public PageResponse<ProductQuestionResponse> getProductQuestionsByProductSlug(String slug, int page, int size) {
         page = Math.max(0, page - 1);
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -60,7 +60,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
 
         Page<ProductQuestion> productQuestionsPage = productQuestionRepository.findByProduct(product, pageable);
 
-        return ResponseWithPagination.fromPage(productQuestionsPage, productQuestionMapper::toResponse);
+        return PageResponse.fromPage(productQuestionsPage, productQuestionMapper::toResponse);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         return productQuestionMapper.toResponse(productQuestionRepository.save(productQuestion));
     }
     @Override
-    public ResponseWithPagination<List<ProductQuestionWithProductResponse>> getAllProductQuestionsForAdmin(
+    public PageResponse<ProductQuestionWithProductResponse> getAllProductQuestionsForAdmin(
             int page, int size, Boolean status, String search, Long productId, String sortBy, String sortOrder) {
 
         page = Math.max(0, page - 1);
@@ -95,7 +95,7 @@ public class ProductQuestionServiceImpl implements ProductQuestionService {
         Page<ProductQuestion> productQuestionsPage = productQuestionRepository.findAllWithFilters(
                 status, search, productId, pageable);
 
-        return ResponseWithPagination.fromPage(productQuestionsPage, productQuestionWithProductMapper::toResponse);
+        return PageResponse.fromPage(productQuestionsPage, productQuestionWithProductMapper::toResponse);
     }
 
     @Transactional

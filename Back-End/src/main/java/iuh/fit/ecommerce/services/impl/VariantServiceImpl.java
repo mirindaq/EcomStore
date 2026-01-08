@@ -2,21 +2,17 @@
 package iuh.fit.ecommerce.services.impl;
 
 
-import iuh.fit.ecommerce.configurations.CacheConfig;
-import iuh.fit.ecommerce.entities.Category;
 import iuh.fit.ecommerce.repositories.VariantCategoryRepository;
 import iuh.fit.ecommerce.services.CategoryService;
 import iuh.fit.ecommerce.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import iuh.fit.ecommerce.dtos.request.variant.VariantAddRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.variant.VariantResponse;
 import iuh.fit.ecommerce.entities.Variant;
 import iuh.fit.ecommerce.entities.VariantValue;
@@ -41,7 +37,7 @@ public class VariantServiceImpl implements VariantService {
     private final VariantCategoryRepository variantCategoryRepository;
 
     @Override
-    public ResponseWithPagination<List<VariantResponse>> getVariants(int page, int size, String variantName) {
+    public PageResponse<VariantResponse> getVariants(int page, int size, String variantName) {
         page = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(page, size);
         Page<Variant> variantPage;
@@ -51,7 +47,7 @@ public class VariantServiceImpl implements VariantService {
         } else {
             variantPage = variantRepository.findAll(pageable);
         }
-        return ResponseWithPagination.fromPage(variantPage,variantMapper::toResponse);
+        return PageResponse.fromPage(variantPage,variantMapper::toResponse);
     }
 
     @Override

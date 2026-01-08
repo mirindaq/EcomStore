@@ -518,7 +518,7 @@ public class DashboardExcelService {
         
         // Data
         var productsResponse = productService.getAllProducts(0, Integer.MAX_VALUE, null, null, null, null, null, null);
-        List<ProductResponse> products = productsResponse.getData();
+        List<ProductResponse> products = productsResponse.getItems();
         
         int rowNum = 1;
         for (ProductResponse product : products) {

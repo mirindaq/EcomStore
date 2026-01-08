@@ -3,7 +3,7 @@ package iuh.fit.ecommerce.services.impl;
 import iuh.fit.ecommerce.dtos.request.voucher.VoucherAddRequest;
 import iuh.fit.ecommerce.dtos.request.voucher.VoucherCustomerRequest;
 import iuh.fit.ecommerce.dtos.request.voucher.VoucherUpdateRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.voucher.VoucherAvailableResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.enums.VoucherCustomerStatus;
@@ -84,7 +84,7 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public ResponseWithPagination<List<VoucherResponse>> getAllVouchers(
+    public PageResponse<VoucherResponse> getAllVouchers(
             int page, int limit, String name, String type, Boolean active, LocalDate startDate, LocalDate endDate) {
 
         page = Math.max(page - 1, 0);
@@ -101,7 +101,7 @@ public class VoucherServiceImpl implements VoucherService {
 
         Page<Voucher> voucherPage = voucherRepository.searchVouchers(name, voucherType, active, startDate, endDate, pageable);
 
-        return ResponseWithPagination.fromPage(voucherPage, voucherMapper::toResponse);
+        return PageResponse.fromPage(voucherPage, voucherMapper::toResponse);
     }
 
     @Override

@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services;
 
 import iuh.fit.ecommerce.dtos.request.article.ArticleCategoryAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleCategoryResponse;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import java.util.List;
 
 public interface ArticleCategoryService {
@@ -17,5 +17,5 @@ public interface ArticleCategoryService {
 
     void deleteCategory(Long id);
 
-    ResponseWithPagination<List<ArticleCategoryResponse>> getAllCategories(int page, int limit, String title);
+    PageResponse<ArticleCategoryResponse> getAllCategories(int page, int limit, String title);
 }

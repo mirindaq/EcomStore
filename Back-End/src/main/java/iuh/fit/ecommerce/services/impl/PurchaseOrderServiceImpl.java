@@ -2,7 +2,7 @@ package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.request.purchaseOrder.PurchaseOrderDetailRequest;
 import iuh.fit.ecommerce.dtos.request.purchaseOrder.PurchaseOrderRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.purchaseOrder.PurchaseOrderResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
@@ -99,7 +99,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     }
 
     @Override
-    public ResponseWithPagination<List<PurchaseOrderResponse>> getAllPurchaseOrders(
+    public PageResponse<PurchaseOrderResponse> getAllPurchaseOrders(
             int page, 
             int size,
             String supplierId,
@@ -141,8 +141,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 })
                 .toList();
 
-        return ResponseWithPagination.<List<PurchaseOrderResponse>>builder()
-                .data(responses)
+        return PageResponse.<PurchaseOrderResponse>builder()
+                .items(responses)
                 .totalPage(purchaseOrderPage.getTotalPages())
                 .totalItem(purchaseOrderPage.getTotalElements())
                 .page(page)

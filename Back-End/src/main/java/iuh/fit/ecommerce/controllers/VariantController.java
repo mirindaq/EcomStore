@@ -3,11 +3,10 @@ package iuh.fit.ecommerce.controllers;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import iuh.fit.ecommerce.dtos.request.variant.VariantAddRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.variant.VariantResponse;
 import iuh.fit.ecommerce.services.VariantService;
 
@@ -24,7 +23,7 @@ public class VariantController {
     private final VariantService variantService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<VariantResponse>>>> getVariants(
+    public ResponseEntity<ResponseSuccess<PageResponse<VariantResponse>>> getVariants(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int size,
             @RequestParam(required = false) String variantName

@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import iuh.fit.ecommerce.dtos.request.article.ArticleCategoryAddRequest;
 import iuh.fit.ecommerce.dtos.response.article.ArticleCategoryResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.services.ArticleCategoryService;
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class ArticleCategoryController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<ArticleCategoryResponse>>>> getAllCategories(
+    public ResponseEntity<ResponseSuccess<PageResponse<ArticleCategoryResponse>>> getAllCategories(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int limit,
             @RequestParam(required = false) String title) {

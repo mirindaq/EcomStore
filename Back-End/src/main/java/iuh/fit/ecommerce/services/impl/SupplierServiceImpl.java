@@ -1,7 +1,7 @@
 package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.dtos.request.supplier.SupplierRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.supplier.SupplierResponse;
 import iuh.fit.ecommerce.entities.Supplier;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
@@ -29,7 +29,7 @@ public class SupplierServiceImpl implements SupplierService {
     private final SupplierMapper supplierMapper;
 
     @Override
-    public ResponseWithPagination<List<SupplierResponse>> getSuppliers(
+    public PageResponse<SupplierResponse> getSuppliers(
             int page, int size,
             String name, String phone, String address, Boolean status,
             LocalDate startDate, LocalDate endDate) {
@@ -41,7 +41,7 @@ public class SupplierServiceImpl implements SupplierService {
                 name, phone, address, status, startDate, endDate, pageable
         );
 
-        return ResponseWithPagination.fromPage(supplierPage, supplierMapper::toResponse);
+        return PageResponse.fromPage(supplierPage, supplierMapper::toResponse);
     }
 
     @Override

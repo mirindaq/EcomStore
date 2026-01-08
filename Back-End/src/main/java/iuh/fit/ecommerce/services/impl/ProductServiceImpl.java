@@ -3,16 +3,12 @@ package iuh.fit.ecommerce.services.impl;
 import iuh.fit.ecommerce.dtos.request.product.ProductAddRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductAttributeRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductUpdateRequest;
-import iuh.fit.ecommerce.dtos.request.product.ProductVariantPromotionRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductVariantRequest;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
-import iuh.fit.ecommerce.dtos.response.product.ProductVariantPromotionResponse;
-import iuh.fit.ecommerce.dtos.response.product.ProductVariantResponse;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
-import iuh.fit.ecommerce.exceptions.custom.InvalidParamException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ProductMapper;
 import iuh.fit.ecommerce.repositories.*;
@@ -27,7 +23,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -94,11 +89,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseWithPagination<List<ProductResponse>> getAllProducts(int page, int size, String keyword, Long brandId, Long categoryId, Boolean status, Double minPrice, Double maxPrice) {
+    public PageResponse<ProductResponse> getAllProducts(int page, int size, String keyword, Long brandId, Long categoryId, Boolean status, Double minPrice, Double maxPrice) {
         page = Math.max(page - 1, 0);
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> productPage = productRepository.findProductsWithFilters(keyword, brandId, categoryId, status, minPrice, maxPrice, pageable);
-        return ResponseWithPagination.fromPage(productPage, productMapper::toResponse);
+        return PageResponse.fromPage(productPage, productMapper::toResponse);
     }
 
     @Override
@@ -330,7 +325,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseWithPagination<List<ProductResponse>> searchProductForUser(String categorySlug, int page, int size, Map<String, String> filters) {
+    public PageResponse<ProductResponse> searchProductForUser(String categorySlug, int page, int size, Map<String, String> filters) {
         page = Math.max(page - 1, 0);
         
         List<String> brandSlugs = parseCommaSeparatedParam(filters.get("brands"));
@@ -364,7 +359,7 @@ public class ProductServiceImpl implements ProductService {
             pageable
         );
         
-        return ResponseWithPagination.fromPage(productPage, productMapper::toResponse);
+        return PageResponse.fromPage(productPage, productMapper::toResponse);
     }
     
     private Pageable createPageableWithSort(int page, int size, String sortBy) {

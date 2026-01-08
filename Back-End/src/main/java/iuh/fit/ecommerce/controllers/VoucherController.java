@@ -1,15 +1,11 @@
 package iuh.fit.ecommerce.controllers;
 
-import iuh.fit.ecommerce.dtos.request.promotion.PromotionAddRequest;
-import iuh.fit.ecommerce.dtos.request.promotion.PromotionUpdateRequest;
 import iuh.fit.ecommerce.dtos.request.voucher.VoucherAddRequest;
 import iuh.fit.ecommerce.dtos.request.voucher.VoucherUpdateRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
-import iuh.fit.ecommerce.dtos.response.base.ResponseWithPagination;
-import iuh.fit.ecommerce.dtos.response.promotion.PromotionResponse;
+import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.voucher.VoucherAvailableResponse;
 import iuh.fit.ecommerce.dtos.response.voucher.VoucherResponse;
-import iuh.fit.ecommerce.services.PromotionService;
 import iuh.fit.ecommerce.services.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +84,7 @@ public class VoucherController {
 
     @GetMapping("")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseSuccess<ResponseWithPagination<List<VoucherResponse>>>> getAllVouchers(
+    public ResponseEntity<ResponseSuccess<PageResponse<VoucherResponse>>> getAllVouchers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "7") int limit,
             @RequestParam(required = false) String name,
