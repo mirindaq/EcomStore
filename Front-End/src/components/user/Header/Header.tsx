@@ -250,7 +250,7 @@ export default function Header() {
 
   return (
     <header ref={headerRef} className="sticky top-0 z-[60] bg-gradient-to-b from-red-500 to-rose-600 text-white shadow-md py-2">
-      <div className="max-w-8xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Top Banner */}
         <div className="text-white text-sm py-2">
           <div className="flex items-center justify-between flex-wrap gap-4">

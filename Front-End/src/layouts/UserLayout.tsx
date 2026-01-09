@@ -8,7 +8,7 @@ export default function UserLayout() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-100">
+      <main className="min-h-screen bg-gray-100 max-w-7xl mx-auto">
         <Outlet />
       </main>
       <FloatingButtons />

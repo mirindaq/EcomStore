@@ -229,7 +229,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
             if (productIds.isEmpty()) {
                 return PageResponse.<ProductResponse>builder()
-                        .items(new ArrayList<>())
+                        .data(new ArrayList<>())
                         .page(page + 1)
                         .limit(size)
                         .totalItem(0)
@@ -270,8 +270,8 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                     int compare = Integer.compare(score2, score1);
                     if (compare == 0) {
                         // Nếu relevance bằng nhau, sắp xếp theo rating
-                        Double rating1 = p1.getRating() != null ? p1.getRating() : 0.0;
-                        Double rating2 = p2.getRating() != null ? p2.getRating() : 0.0;
+                        double rating1 = p1.getRating() != null ? p1.getRating() : 0.0;
+                        double rating2 = p2.getRating() != null ? p2.getRating() : 0.0;
                         return Double.compare(rating2, rating1);
                     }
                     return compare;
@@ -283,10 +283,21 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                     .collect(Collectors.toList());
 
             long totalItem = searchHits.getTotalHits();
+            
+            // Phát hiện Elasticsearch index không đồng bộ với DB
+            if (totalItem > 0 && productResponses.isEmpty()) {
+                logger.warn("Elasticsearch index out of sync! Found {} hits in ES but 0 valid products in DB. " +
+                        "Please run reindex to sync Elasticsearch with Database.", totalItem);
+                totalItem = 0;
+            } else if (productResponses.size() < productIds.size()) {
+                logger.warn("Elasticsearch index partially out of sync! {} products from ES, {} valid in DB. " +
+                        "Consider running reindex.", productIds.size(), productResponses.size());
+            }
+            
             int totalPages = (int) Math.ceil((double) totalItem / size);
 
             return PageResponse.<ProductResponse>builder()
-                    .items(productResponses)
+                    .data(productResponses)
                     .page(page + 1)
                     .limit(size)
                     .totalItem(totalItem)

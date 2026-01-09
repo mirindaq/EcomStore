@@ -16,7 +16,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageResponse<T> {
-    private List<T> items;
+    private List<T> data;
     private int page;
     private int totalPage;
     private int limit;
@@ -27,7 +27,7 @@ public class PageResponse<T> {
             Function<E, R> mapper
     ) {
         return PageResponse.<R>builder()
-                .items(page.getContent().stream().map(mapper).toList())
+                .data(page.getContent().stream().map(mapper).toList())
                 .page(page.getNumber() + 1)
                 .totalPage(page.getTotalPages())
                 .limit(page.getSize())

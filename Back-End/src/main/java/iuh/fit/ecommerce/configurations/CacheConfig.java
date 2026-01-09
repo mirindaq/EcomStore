@@ -23,7 +23,6 @@ import java.util.Map;
 @EnableCaching
 public class CacheConfig {
     public static final String PROVINCE_CACHE = "provinces";
-    public static final String BANNER_CACHE = "banners";
     public static final String RANKING_CACHE = "rankings";
 
     @Bean
@@ -32,7 +31,6 @@ public class CacheConfig {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // Cấu hình type information với NON_FINAL để đảm bảo ResponseWithPagination có type info
         objectMapper.activateDefaultTyping(
             objectMapper.getPolymorphicTypeValidator(),
             com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL,
@@ -40,8 +38,7 @@ public class CacheConfig {
         );
 
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
-        
-        // ObjectMapper riêng cho các cache có List trực tiếp (không có type info cho List)
+
         ObjectMapper listObjectMapper = new ObjectMapper();
         listObjectMapper.registerModule(new JavaTimeModule());
         listObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -67,7 +64,6 @@ public class CacheConfig {
         // Các cache có List trực tiếp → dùng listConfig (không có type info)
         cacheConfigurations.put(PROVINCE_CACHE, listConfig.entryTtl(Duration.ofHours(24)));
         cacheConfigurations.put(RANKING_CACHE, listConfig.entryTtl(Duration.ofHours(24)));
-        cacheConfigurations.put(BANNER_CACHE, listConfig.entryTtl(Duration.ofHours(1)));
 
 
         return RedisCacheManager.builder(redisConnectionFactory)

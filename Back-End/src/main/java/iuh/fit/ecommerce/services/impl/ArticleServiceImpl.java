@@ -90,7 +90,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .toList();
 
         return PageResponse.<ArticleResponse>builder()
-                .items(responses)
+                .data(responses)
                 .page(page + 1)
                 .limit(limit)
                 .totalItem((int) articlePage.getTotalElements())
@@ -112,7 +112,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .toList();
 
         return PageResponse.<ArticleResponse>builder()
-                .items(responses)
+                .data(responses)
                 .page(page + 1)
                 .limit(limit)
                 .totalItem((int) articlePage.getTotalElements())
@@ -120,9 +120,7 @@ public class ArticleServiceImpl implements ArticleService {
                 .build();
     }
 
-    /**
-     * ✅ Lấy bài viết theo slug
-     */
+
     @Override
     @Transactional(readOnly = true)
     public ArticleResponse getArticleBySlug(String slug) {
@@ -138,29 +136,6 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
 
-    /**
-     * ✅ Cập nhật bài viết (chỉ Staff)
-     */
-//    @Override
-//    @Transactional
-//    public ArticleResponse updateArticle(String slug, ArticleAddRequest articleAddRequest) {
-//        Article article = findBySlug(slug);
-//        Staff staff = securityUtil.getCurrentStaff();
-//
-//        ArticleCategory category = articleCategoryRepository.findById(articleAddRequest.getArticleCategoryId())
-//                .orElseThrow(() -> new ResourceNotFoundException(
-//                        "Article category not found with ID: " + articleAddRequest.getArticleCategoryId()
-//                ));
-//
-//        article.setTitle(articleAddRequest.getTitle());
-//        article.setThumbnail(articleAddRequest.getThumbnail());
-//        article.setContent(articleAddRequest.getContent());
-//        article.setStatus(articleAddRequest.getStatus() != null ? articleAddRequest.getStatus() : article.getStatus());
-//        article.setStaff(staff);
-//        article.setArticleCategory(category);
-//
-//        return articleMapper.toResponse(articleRepository.save(article));
-//    }
 
     @Override
     @Transactional
@@ -181,16 +156,6 @@ public class ArticleServiceImpl implements ArticleService {
         return articleMapper.toResponse(articleRepository.save(article));
     }
 
-    /**
-     * ✅ Đổi trạng thái bài viết (chỉ Staff)
-     */
-//    @Override
-//    @Transactional
-//    public void updateArticleStatus(Long id, Boolean status) {
-//        Article article = findById(id);
-//        article.setStatus(status);
-//        articleRepository.save(article);
-//    }
 
     @Override
     public void changeStatusArticle(Long id) {
@@ -199,9 +164,6 @@ public class ArticleServiceImpl implements ArticleService {
         articleRepository.save(article);
     }
 
-    /**
-     * 🔎 Helper methods
-     */
     private Article findById(Long id) {
         return articleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ARTICLE_NOT_FOUND));

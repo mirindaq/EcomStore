@@ -142,7 +142,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .toList();
 
         return PageResponse.<PurchaseOrderResponse>builder()
-                .items(responses)
+                .data(responses)
                 .totalPage(purchaseOrderPage.getTotalPages())
                 .totalItem(purchaseOrderPage.getTotalElements())
                 .page(page)
