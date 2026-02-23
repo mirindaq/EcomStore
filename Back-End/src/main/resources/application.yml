@@ -126,9 +126,6 @@ payment:
     return-url: ${PAY_OS_RETURN_URL}
     cancel-url: ${PAY_OS_CANCEL_URL}
 
-cloudinary:
-  url: ${CLOUDINARY_URL}
-
 api:
   prefix: ${API_PREFIX}
 

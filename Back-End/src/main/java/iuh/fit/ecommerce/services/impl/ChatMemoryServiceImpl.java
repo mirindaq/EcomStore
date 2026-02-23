@@ -33,11 +33,9 @@ public class ChatMemoryServiceImpl implements ChatMemoryService {
     public void addMessage(String sessionId, String role, String content) {
         String historyKey = REDIS_KEY_PREFIX + sessionId;
         String activityKey = REDIS_ACTIVITY_PREFIX + sessionId;
-        
-        // Lấy danh sách messages hiện tại từ Redis
+
         List<ChatHistoryMessage> messages = getMessagesFromRedis(historyKey);
-        
-        // Tạo message mới
+
         ChatHistoryMessage message = ChatHistoryMessage.builder()
                 .role(role)
                 .content(content)
@@ -64,8 +62,6 @@ public class ChatMemoryServiceImpl implements ChatMemoryService {
     public List<ChatHistoryMessage> getRecentMessages(String sessionId, int limit) {
         String historyKey = REDIS_KEY_PREFIX + sessionId;
         String activityKey = REDIS_ACTIVITY_PREFIX + sessionId;
-        
-        // Lấy messages từ Redis
         List<ChatHistoryMessage> messages = getMessagesFromRedis(historyKey);
         
         if (messages == null || messages.isEmpty()) {
@@ -96,20 +92,14 @@ public class ChatMemoryServiceImpl implements ChatMemoryService {
             log.error("Error clearing history for session: {}", sessionId, e);
         }
     }
-    
-    /**
-     * Lấy messages từ Redis
-     */
-    @SuppressWarnings("unchecked")
+
     private List<ChatHistoryMessage> getMessagesFromRedis(String key) {
         try {
             Object value = redisTemplate.opsForValue().get(key);
             if (value == null) {
                 return new ArrayList<>();
             }
-            
-            // GenericJackson2JsonRedisSerializer đã tự động deserialize
-            // Nếu value là List, convert sang List<ChatHistoryMessage>
+
             if (value instanceof List) {
                 List<?> rawList = (List<?>) value;
                 if (rawList.isEmpty()) {

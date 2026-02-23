@@ -17,7 +17,7 @@ public class ProductIndexingConsumer {
     private final ProductSearchService productSearchService;
     private final VectorStoreService vectorStoreService;
 
-    @RabbitListener(queues = "product.created.queue")
+    @RabbitListener(queues = "product.index.queue")
     public void handleProductCreated(ProductCreatedEvent event) {
 
         Product product = productRepository
