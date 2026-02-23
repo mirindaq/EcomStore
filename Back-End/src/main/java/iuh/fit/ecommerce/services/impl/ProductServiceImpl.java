@@ -7,10 +7,12 @@ import iuh.fit.ecommerce.dtos.request.product.ProductVariantRequest;
 import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
 import iuh.fit.ecommerce.entities.*;
+import iuh.fit.ecommerce.events.ProductCreatedEvent;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.exceptions.custom.ConflictException;
 import iuh.fit.ecommerce.exceptions.custom.ResourceNotFoundException;
 import iuh.fit.ecommerce.mappers.ProductMapper;
+import iuh.fit.ecommerce.messaging.rabbitmq.publisher.ProductMessagePublisher;
 import iuh.fit.ecommerce.repositories.*;
 import iuh.fit.ecommerce.services.*;
 import iuh.fit.ecommerce.services.ProductSearchService;
@@ -45,9 +47,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductAttributeValueRepository productAttributeValueRepository;
     private final ProductFilterValueRepository productFilterValueRepository;
     private final FilterValueRepository filterValueRepository;
-    private final ProductImageRepository productImageRepository;
-    private final VectorStoreService vectorStoreService;
-    private final ProductSearchService productSearchService;
+    private final ProductMessagePublisher productMessagePublisher;
 
     @Override
     @Transactional
@@ -68,10 +68,9 @@ public class ProductServiceImpl implements ProductService {
 
         saveFilterValues(productAddRequest.getFilterValueIds(), product);
 
-        Product productIndex = productRepository.findForIndexing(product.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        productSearchService.indexProduct(productIndex);
+        productMessagePublisher.publishProduct(
+                new ProductCreatedEvent(product.getId())
+        );
     }
 
     private void saveAttributes(List<ProductAttributeRequest> attributes, Product product) {
@@ -112,8 +111,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse updateProduct(Long id, ProductUpdateRequest request) {
         Product product = getProductEntityById(id);
-        
-        // Check if name changed and new name already exists
+
         if (!product.getName().equals(request.getName()) && 
             productRepository.existsByName(request.getName())) {
             throw new ConflictException(ErrorCode.PRODUCT_NAME_EXISTS);
@@ -156,14 +154,13 @@ public class ProductServiceImpl implements ProductService {
         
         // Update filter values
         updateFilterValues(product, request.getFilterValueIds());
-        
-        productRepository.save(product);
-        
-        // Re-index to Elasticsearch
-        Product savedProduct = productRepository.findById(product.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        productSearchService.indexProduct(savedProduct);
-        
+
+        Product savedProduct = productRepository.save(product);
+
+        productMessagePublisher.publishProduct(
+                new ProductCreatedEvent(savedProduct.getId())
+        );
+
         return productMapper.toResponse(savedProduct);
     }
     
@@ -173,9 +170,6 @@ public class ProductServiceImpl implements ProductService {
         Product product = getProductEntityById(id);
         product.setStatus(!product.getStatus());
         productRepository.save(product);
-        
-        // Re-index to Elasticsearch
-        productSearchService.indexProduct(product);
     }
     
     private void updateProductImages(Product product, List<String> newImageUrls) {
@@ -256,11 +250,9 @@ public class ProductServiceImpl implements ProductService {
                 existingVariant.setStock(req.getStock());
                 productVariantRepository.save(existingVariant);
                 variantIdsToKeep.add(existingVariant.getId());
-                
-                // Re-index variant
-                vectorStoreService.indexProductVariant(existingVariant);
+
             } else {
-                // Create new variant
+
                 ProductVariant variant = ProductVariant.builder()
                         .price(req.getPrice())
                         .sku(newSku)
@@ -270,11 +262,6 @@ public class ProductServiceImpl implements ProductService {
                 productVariantRepository.save(variant);
                 saveVariantValues(req.getVariantValueIds(), variant);
                 variantIdsToKeep.add(variant.getId());
-                
-                // Index new variant
-                ProductVariant savedVariant = productVariantRepository.findById(variant.getId())
-                        .orElse(variant);
-                vectorStoreService.indexProductVariant(savedVariant);
             }
         }
         
@@ -453,13 +440,6 @@ public class ProductServiceImpl implements ProductService {
 
             productVariantRepository.save(variant);
             saveVariantValues(req.getVariantValueIds(), variant);
-            
-            // Reload variant để có đầy đủ thông tin (product, variant values)
-            ProductVariant savedVariant = productVariantRepository.findById(variant.getId())
-                    .orElse(variant);
-            
-            // Index vào Qdrant vector store
-            vectorStoreService.indexProductVariant(savedVariant);
         }
     }
 
@@ -478,7 +458,7 @@ public class ProductServiceImpl implements ProductService {
     private String generateSku(String spu, List<Long> variantValueIds) {
         // Get variant values and use their existing slug field, fallback to value if slug is null
         List<String> slugs = variantValueIds.stream()
-                .map(id -> variantValueService.getVariantValueEntityById(id))
+                .map(variantValueService::getVariantValueEntityById)
                 .map(vv -> {
                     String slug = vv.getSlug();
                     return (slug != null && !slug.isEmpty()) ? slug : vv.getValue();
