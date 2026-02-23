@@ -67,13 +67,11 @@ public class ProductServiceImpl implements ProductService {
         saveVariants(productAddRequest.getVariants(), product);
 
         saveFilterValues(productAddRequest.getFilterValueIds(), product);
-        
-        // Reload product with all relationships before indexing
-        Product savedProduct = productRepository.findById(product.getId())
+
+        Product productIndex = productRepository.findForIndexing(product.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        
-        // Index product to Elasticsearch
-        productSearchService.indexProduct(savedProduct);
+
+        productSearchService.indexProduct(productIndex);
     }
 
     private void saveAttributes(List<ProductAttributeRequest> attributes, Product product) {

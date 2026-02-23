@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -184,38 +185,44 @@ public class PromotionServiceImpl implements PromotionService {
         return promos.isEmpty() ? null : promos.get(0);
     }
 
-    @Override
     public ProductResponse addPromotionToProductResponseByProduct(Product product) {
+
         ProductResponse response = productMapper.toResponse(product);
-
         List<ProductVariant> variants = product.getProductVariants();
-        if (variants == null || variants.isEmpty()) return response;
 
-        Map<Long, List<Promotion>>  promosByVariant = getPromotionsGroupByVariantId(variants, product);
+        if (CollectionUtils.isEmpty(variants)) {
+            return response;
+        }
 
-        Map<Long, ProductVariant> variantMap = variants.stream()
-                .collect(Collectors.toMap(ProductVariant::getId, v -> v));
+        Map<Long, List<Promotion>> promosByVariant =
+                getPromotionsGroupByVariantId(variants, product);
 
-        for (ProductVariantResponse v : response.getVariants()) {
-            ProductVariant entityVariant = variantMap.get(v.getId());
-            if (entityVariant == null) continue;
+        List<ProductVariantResponse> responseVariants = response.getVariants();
+
+        for (int i = 0; i < variants.size(); i++) {
+
+            ProductVariant entityVariant = variants.get(i);
+            ProductVariantResponse v = responseVariants.get(i);
 
             Double originalPrice = calculateOriginalPrice(entityVariant);
             v.setOldPrice(originalPrice);
 
-            Promotion bestPromo = getBestPromotion(entityVariant, promosByVariant);
+            Promotion bestPromo =
+                    getBestPromotion(entityVariant, promosByVariant);
 
             if (bestPromo != null) {
-                Double finalPrice = calculateDiscountPrice(entityVariant, bestPromo);
-                v.setPrice(finalPrice);
+                v.setPrice(calculateDiscountPrice(entityVariant, bestPromo));
                 v.setDiscount(bestPromo.getDiscount());
             } else {
                 v.setPrice(originalPrice);
                 v.setDiscount(0.0);
             }
         }
+
         return response;
     }
+
+
 
 
     private boolean appliesToVariant(Promotion promo, ProductVariant variant) {

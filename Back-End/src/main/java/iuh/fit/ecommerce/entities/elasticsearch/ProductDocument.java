@@ -30,9 +30,6 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword)
     private String slug;
     
-    @Field(type = FieldType.Text, analyzer = "standard", searchAnalyzer = "standard")
-    private String description;
-    
     @Field(type = FieldType.Keyword)
     private String thumbnail;
     
@@ -47,13 +44,13 @@ public class ProductDocument {
     
     @Field(type = FieldType.Keyword)
     private String spu;
-    
+
     @Field(type = FieldType.Long)
     private Long brandId;
-    
+
     @Field(type = FieldType.Keyword)
     private String brandName;
-    
+
     @Field(type = FieldType.Long)
     private Long categoryId;
     
@@ -63,34 +60,28 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword)
     private String categorySlug;
     
-    @Field(type = FieldType.Text)
-    private List<String> productImages;
-    
     @Field(type = FieldType.Double)
     private Double minPrice;
     
     @Field(type = FieldType.Double)
     private Double maxPrice;
-    
-    @Field(type = FieldType.Text)
+
+    @Field(type = FieldType.Text, analyzer = "standard")
     private List<String> searchableText;
-    
-    // Product Variants information
-    @Field(type = FieldType.Text)
+
+    @Field(type = FieldType.Keyword)
     private List<String> variantSkus;
     
     @Field(type = FieldType.Text)
     private List<String> variantValues;
-    
-    // Product Attributes information
+
     @Field(type = FieldType.Text)
     private List<String> attributeNames;
     
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private List<String> attributeValues;
-    
-    // Product Filter Values information
-    @Field(type = FieldType.Text)
+
+    @Field(type = FieldType.Keyword)
     private List<String> filterValues;
 }
 

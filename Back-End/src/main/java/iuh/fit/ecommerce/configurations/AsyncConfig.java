@@ -1,4 +1,4 @@
-package iuh.fit.ecommerce.configurations.jwt;
+package iuh.fit.ecommerce.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -9,15 +9,18 @@ import iuh.fit.ecommerce.entities.Product;
 import iuh.fit.ecommerce.entities.ProductImage;
 import iuh.fit.ecommerce.entities.ProductVariant;
 import iuh.fit.ecommerce.entities.elasticsearch.ProductDocument;
+import iuh.fit.ecommerce.mappers.ProductDocumentMapper;
 import iuh.fit.ecommerce.mappers.ProductMapper;
 import iuh.fit.ecommerce.repositories.ProductRepository;
 import iuh.fit.ecommerce.repositories.elasticsearch.ProductSearchRepository;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.services.ProductSearchService;
 import iuh.fit.ecommerce.services.PromotionService;
+import iuh.fit.ecommerce.utils.ProductHelper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -51,6 +54,8 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     private final ProductMapper productMapper;
     private final ElasticsearchOperations elasticsearchOperations;
     private final PromotionService promotionService;
+    private final ProductDocumentMapper productDocumentMapper;
+    private final ProductHelper productHelper;
 
     @Override
     public PageResponse<ProductResponse> searchProducts(
@@ -422,41 +427,14 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     @Override
     @Transactional
     public void indexProduct(Product product) {
-        // Reload product with all relationships
-        Product fullProduct = productRepository.findById(product.getId())
-            .orElse(product);
-        
-        // Force load all lazy relationships
-        if (fullProduct.getProductVariants() != null) {
-            fullProduct.getProductVariants().forEach(variant -> {
-                if (variant.getProductVariantValues() != null) {
-                    variant.getProductVariantValues().forEach(pvv -> {
-                        if (pvv.getVariantValue() != null) {
-                            pvv.getVariantValue().getValue(); // Force load
-                        }
-                    });
-                }
-            });
-        }
-        if (fullProduct.getAttributes() != null) {
-            fullProduct.getAttributes().forEach(attr -> {
-                if (attr.getAttribute() != null) {
-                    attr.getAttribute().getName(); // Force load
-                }
-            });
-        }
-        if (fullProduct.getProductFilterValues() != null) {
-            fullProduct.getProductFilterValues().forEach(pfv -> {
-                if (pfv.getFilterValue() != null) {
-                    pfv.getFilterValue().getValue(); // Force load
-                }
-            });
-        }
-        if (fullProduct.getProductImages() != null) {
-            fullProduct.getProductImages().size(); // Force load
-        }
-        
-        ProductDocument document = convertToDocument(fullProduct);
+        Product fullProduct = productRepository
+                .findForIndexing(product.getId())
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found"));
+
+        ProductDocument document =
+                productDocumentMapper.toDocument(fullProduct,productHelper);
+
         productSearchRepository.save(document);
     }
 
@@ -466,53 +444,37 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public void reindexAllProducts() {
-        // Delete all existing documents
+
         try {
             productSearchRepository.deleteAll();
-        } catch (Exception e) {
-            // Ignore if index doesn't exist yet
-        }
-        // Index all products - load with all relationships
-        List<Product> products = productRepository.findAll();
-        List<ProductDocument> documents = new ArrayList<>();
-        
-        for (Product product : products) {
-            try {
-                // Force load all lazy relationships by accessing them
-                if (product.getProductVariants() != null) {
-                    product.getProductVariants().forEach(variant -> {
-                        if (variant.getProductVariantValues() != null) {
-                            variant.getProductVariantValues().size(); // Force load
-                        }
-                    });
-                }
-                if (product.getAttributes() != null) {
-                    product.getAttributes().size(); // Force load
-                }
-                if (product.getProductFilterValues() != null) {
-                    product.getProductFilterValues().forEach(pfv -> {
-                        if (pfv.getFilterValue() != null) {
-                            pfv.getFilterValue().getValue();
-                        }
-                    });
-                }
-                if (product.getProductImages() != null) {
-                    product.getProductImages().size();
-                }
-                
-                ProductDocument document = convertToDocument(product);
-                documents.add(document);
-            } catch (Exception e) {
-                System.err.println("Error indexing product ID " + product.getId() + ": " + e.getMessage());
+        } catch (Exception ignored) {}
+
+        final int BATCH_SIZE = 200;
+        int page = 0;
+
+        Page<Product> productPage;
+
+        do {
+            productPage = productRepository.findAll(
+                    PageRequest.of(page, BATCH_SIZE)
+            );
+
+            List<ProductDocument> documents =
+                    productPage.getContent()
+                            .stream()
+                            .map(product ->
+                                    productDocumentMapper.toDocument(product, productHelper))
+                            .toList();
+
+            if (!documents.isEmpty()) {
+                productSearchRepository.saveAll(documents);
             }
-        }
-        
-        // Save in batches to avoid memory issues
-        if (!documents.isEmpty()) {
-            productSearchRepository.saveAll(documents);
-        }
+
+            page++;
+
+        } while (productPage.hasNext());
     }
     
     /**
@@ -617,15 +579,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                 maxPrice = prices.stream().max(Double::compareTo).orElse(null);
             }
         }
-        
-        // Get product images
-        List<String> imageUrls = new ArrayList<>();
-        if (product.getProductImages() != null) {
-            imageUrls = product.getProductImages().stream()
-                .map(ProductImage::getUrl)
-                .filter(url -> url != null && !url.isEmpty())
-                .collect(Collectors.toList());
-        }
+
         
         // Collect attribute names and values
         List<String> attributeNames = new ArrayList<>();
@@ -679,7 +633,6 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             .productId(product.getId())
             .name(product.getName())
             .slug(product.getSlug())
-            .description(product.getDescription())
             .thumbnail(product.getThumbnail())
             .rating(product.getRating())
             .stock(totalStock)
@@ -690,7 +643,6 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
             .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
             .categorySlug(product.getCategory() != null ? product.getCategory().getSlug() : null)
-            .productImages(imageUrls)
             .minPrice(minPrice)
             .maxPrice(maxPrice)
             .searchableText(searchableText)

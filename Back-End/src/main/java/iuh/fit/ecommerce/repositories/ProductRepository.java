@@ -17,6 +17,22 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     Product getProductBySlug(String slug);
 
+    @Query("""
+        SELECT DISTINCT p FROM Product p
+        LEFT JOIN FETCH p.brand
+        LEFT JOIN FETCH p.category
+        LEFT JOIN FETCH p.productVariants v
+        LEFT JOIN FETCH v.productVariantValues pvv
+        LEFT JOIN FETCH pvv.variantValue
+        LEFT JOIN FETCH p.attributes pa
+        LEFT JOIN FETCH pa.attribute
+        LEFT JOIN FETCH p.productFilterValues pfv
+        LEFT JOIN FETCH pfv.filterValue
+        LEFT JOIN FETCH p.productImages
+        WHERE p.id = :id
+    """)
+    Optional<Product> findForIndexing(@Param("id") Long id);
+
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN p.productVariants pv " +
             "WHERE (:keyword IS NULL OR (" +
