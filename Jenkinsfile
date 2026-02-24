@@ -44,7 +44,10 @@ pipeline {
         stage('Build Backend') {
             steps {
                 dir('Back-End') {
-                    sh './mvnw -B -q clean package -DskipTests'
+                    sh '''
+                        chmod +x mvnw
+                        ./mvnw -B -q clean package -DskipTests
+                    '''
                 }
             }
         }
