@@ -385,7 +385,7 @@ export default function Profile() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-8xl mx-auto py-4">
+      <div className="max-w-8xl mx-auto py-4 bg-white">
         <div className="grid grid-cols-12 gap-3">
           {/* Sidebar */}
           <div className="col-span-3">

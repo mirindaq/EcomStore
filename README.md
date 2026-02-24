@@ -168,6 +168,3 @@ EcomStore/
 
 Dự án được phát triển với mục đích **học tập và portfolio** — áp dụng kiến trúc phần mềm, Spring Boot, React, tìm kiếm, khuyến mãi, thanh toán và real-time chat trong bối cảnh thương mại điện tử thực tế.
 
----
-
-*README này có thể dùng làm mô tả dự án trong CV hoặc portfolio.*
