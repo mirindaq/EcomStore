@@ -24,7 +24,7 @@ pipeline {
                     mkdir -p Back-End
                     SRC=$HOME
                     [ -d /home/deploy ] && SRC=/home/deploy
-                    echo "Nguồn env: $SRC"
+                    echo "Nguồn file env: $SRC"
                     if [ -f "$SRC/local.env" ]; then
                         cp "$SRC/local.env" Back-End/local.env
                         echo "Đã copy local.env -> Back-End/local.env (BE)"
