@@ -11,10 +11,10 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Repository: ${env.GIT_URL}, Branch: ${env.GIT_BRANCH ?: 'unknown'}"
             }
         }
 
@@ -22,58 +22,34 @@ pipeline {
             steps {
                 sh '''
                     mkdir -p Back-End
+
                     SRC=$HOME
                     [ -d /home/deploy ] && SRC=/home/deploy
-                    echo "Nguồn file env: $SRC"
-                    if [ -f "$SRC/local.env" ]; then
-                        cp "$SRC/local.env" Back-End/local.env
-                        echo "Đã copy local.env -> Back-End/local.env (BE)"
-                    else
-                        echo "Không thấy $SRC/local.env"; exit 1
-                    fi
-                    if [ -f "$SRC/.env" ]; then
-                        cp "$SRC/.env" .env
-                        echo "Đã copy .env -> .env (root)"
-                    else
-                        echo "Không thấy $SRC/.env"; exit 1
-                    fi
+
+                    echo "Nguồn env: $SRC"
+
+                    cp "$SRC/local.env" Back-End/local.env
+                    cp "$SRC/.env" .env
                 '''
             }
         }
 
-        stage('Build Backend') {
+        stage('Deploy (Docker Compose)') {
             steps {
-                dir('Back-End') {
-                    sh '''
-                        chmod +x mvnw
-                        ./mvnw -B -q clean package -DskipTests
-                    '''
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir('Front-End') {
-                    sh 'npm ci --prefer-offline --no-audit || npm install'
-                    sh 'npm run build'
-                }
-            }
-        }
-
-        stage('Docker: Build images') {
-            steps {
-                sh 'docker compose build backend frontend'
+                sh '''
+                    docker compose pull || true
+                    docker compose up -d --build
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully.'
+            echo '✅ Deploy success'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo '❌ Deploy failed'
         }
     }
 }
