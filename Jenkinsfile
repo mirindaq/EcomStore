@@ -1,14 +1,6 @@
 pipeline {
     agent any
 
-    parameters {
-        string(
-            name: 'ENV_SOURCE_DIR',
-            defaultValue: '',
-            description: 'Thư mục chứa local.env và .env (vd: /home/deploy hoặc để trống nếu dùng workspace/env/)'
-        )
-    }
-
     options {
         timeout(time: 45, unit: 'MINUTES')
         disableConcurrentBuilds()
@@ -28,32 +20,31 @@ pipeline {
 
         stage('Prepare env files') {
             steps {
-                script {
-                    def srcDir = params.ENV_SOURCE_DIR?.trim() ?: 'env'
-                    echo "Nguồn env: ${srcDir} (local.env -> BE, .env -> root)"
-                    sh """
-                        mkdir -p Back-End
-                        if [ -f '${srcDir}/local.env' ]; then
-                            cp '${srcDir}/local.env' Back-End/local.env
-                            echo 'Đã copy local.env -> Back-End/local.env (BE)'
-                        else
-                            echo 'Không thấy ${srcDir}/local.env, bỏ qua.'
-                        fi
-                        if [ -f '${srcDir}/.env' ]; then
-                            cp '${srcDir}/.env' .env
-                            echo 'Đã copy .env -> .env (root, compose + FE build)'
-                        else
-                            echo 'Không thấy ${srcDir}/.env, bỏ qua.'
-                        fi
-                    """
-                }
+                sh '''
+                    mkdir -p Back-End
+                    SRC=$HOME
+                    [ -d /home/deploy ] && SRC=/home/deploy
+                    echo "Nguồn env: $SRC"
+                    if [ -f "$SRC/local.env" ]; then
+                        cp "$SRC/local.env" Back-End/local.env
+                        echo "Đã copy local.env -> Back-End/local.env (BE)"
+                    else
+                        echo "Không thấy $SRC/local.env"; exit 1
+                    fi
+                    if [ -f "$SRC/.env" ]; then
+                        cp "$SRC/.env" .env
+                        echo "Đã copy .env -> .env (root)"
+                    else
+                        echo "Không thấy $SRC/.env"; exit 1
+                    fi
+                '''
             }
         }
 
         stage('Build Backend') {
             steps {
                 dir('Back-End') {
-                    sh 'mvn -B -q clean package -DskipTests'
+                    sh './mvnw -B -q clean package -DskipTests'
                 }
             }
         }

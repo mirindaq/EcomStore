@@ -6,7 +6,7 @@ import { productService } from '@/services/product.service';
 import { filterCriteriaService } from '@/services/filterCriteria.service';
 import { bannerService } from '@/services/banner.service';
 import type { Brand } from '@/types/brand.type';
-import type { ProductSearchListResponse, ProductSearchResponse } from '@/types/product.type';
+import type { ProductSearchListResponse } from '@/types/product.type';
 import type { FilterCriteria } from '@/types/filterCriteria.type';
 import type { BannerDisplayResponse } from '@/types/banner.type';
 import Breadcrumb from '@/components/user/search/Breadcrumb';
