@@ -1,32 +1,64 @@
 pipeline {
     agent any
 
+    parameters {
+        string(
+            name: 'ENV_SOURCE_DIR',
+            defaultValue: '',
+            description: 'Thư mục chứa local.env và .env (vd: /home/deploy hoặc để trống nếu dùng workspace/env/)'
+        )
+    }
+
+    options {
+        timeout(time: 45, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        COMPOSE_PROJECT_NAME = 'ecomstore'
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Checked out a from ${env.GIT_URL}"
+                echo "Repository: ${env.GIT_URL}, Branch: ${env.GIT_BRANCH ?: 'unknown'}"
             }
         }
 
-        stage('Info') {
+        stage('Prepare env files') {
             steps {
-                echo "Branch: ${env.GIT_BRANCH ?: 'unknown'}"
-                echo "Commit: ${env.GIT_COMMIT ?: 'unknown'}"
-                sh 'echo "Node: $(node -v 2>/dev/null || echo not installed)"'
-                sh 'echo "Java: $(java -version 2>&1 | head -1 || echo not installed)"'
+                script {
+                    def srcDir = params.ENV_SOURCE_DIR?.trim() ?: 'env'
+                    echo "Nguồn env: ${srcDir} (local.env -> BE, .env -> root)"
+                    sh """
+                        mkdir -p Back-End
+                        if [ -f '${srcDir}/local.env' ]; then
+                            cp '${srcDir}/local.env' Back-End/local.env
+                            echo 'Đã copy local.env -> Back-End/local.env (BE)'
+                        else
+                            echo 'Không thấy ${srcDir}/local.env, bỏ qua.'
+                        fi
+                        if [ -f '${srcDir}/.env' ]; then
+                            cp '${srcDir}/.env' .env
+                            echo 'Đã copy .env -> .env (root, compose + FE build)'
+                        else
+                            echo 'Không thấy ${srcDir}/.env, bỏ qua.'
+                        fi
+                    """
+                }
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                dir('Back-End') {
+                    sh 'mvn -B -q clean package -DskipTests'
+                }
             }
         }
 
         stage('Build Frontend') {
-            when {
-                anyOf {
-                    buildingTag()
-                    branch 'main'
-                    branch 'master'
-                    branch 'development'
-                }
-            }
             steps {
                 dir('Front-End') {
                     sh 'npm ci --prefer-offline --no-audit || npm install'
@@ -35,19 +67,9 @@ pipeline {
             }
         }
 
-        stage('Build Backend') {
-            when {
-                anyOf {
-                    buildingTag()
-                    branch 'main'
-                    branch 'master'
-                    branch 'development'
-                }
-            }
+        stage('Docker: Build images') {
             steps {
-                dir('Back-End') {
-                    sh 'mvn -B -q clean compile -DskipTests'
-                }
+                sh 'docker compose build backend frontend'
             }
         }
     }
