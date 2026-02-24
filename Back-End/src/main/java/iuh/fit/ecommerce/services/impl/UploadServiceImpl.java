@@ -28,8 +28,8 @@ public class UploadServiceImpl implements UploadService {
     @Value("${minio.bucket-name}")
     private String bucketName;
 
-    @Value("${minio.url}")
-    private String minioUrl;
+    @Value("${minio.public-url}")
+    private String publicUrl;
 
     @Override
     public List<String> upload(UploadRequest uploadRequest) {
@@ -65,7 +65,7 @@ public class UploadServiceImpl implements UploadService {
                         );
                     }
 
-                    return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
+                    return String.format("%s/%s/%s", publicUrl, bucketName, objectName);
                 } catch (Exception e) {
                     log.error("Lỗi khi upload file: {}", e.getMessage());
                     throw new RuntimeException(ErrorCode.UPLOAD_FAILED.getMessage(), e);
