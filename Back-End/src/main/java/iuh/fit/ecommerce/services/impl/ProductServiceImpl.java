@@ -4,8 +4,13 @@ import iuh.fit.ecommerce.dtos.request.product.ProductAddRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductAttributeRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductUpdateRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductVariantRequest;
+import iuh.fit.ecommerce.dtos.request.search.SearchProductContext;
 import iuh.fit.ecommerce.dtos.response.base.PageResponse;
+import iuh.fit.ecommerce.dtos.response.product.BestVariantResponse;
+import iuh.fit.ecommerce.dtos.response.product.DisplayPriceResult;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
+import iuh.fit.ecommerce.dtos.response.product.ProductSearchResponse;
+import iuh.fit.ecommerce.dtos.projection.MinVariantPriceProjection;
 import iuh.fit.ecommerce.entities.*;
 import iuh.fit.ecommerce.events.ProductCreatedEvent;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
@@ -17,6 +22,7 @@ import iuh.fit.ecommerce.repositories.*;
 import iuh.fit.ecommerce.services.*;
 import iuh.fit.ecommerce.services.ProductSearchService;
 import iuh.fit.ecommerce.services.VectorStoreService;
+import iuh.fit.ecommerce.specifications.ProductSpecification;
 import iuh.fit.ecommerce.utils.StringUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +31,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,6 +56,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductFilterValueRepository productFilterValueRepository;
     private final FilterValueRepository filterValueRepository;
     private final ProductMessagePublisher productMessagePublisher;
+    private final PromotionResolver promotionResolver;
 
     @Override
     @Transactional
@@ -310,16 +319,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public PageResponse<ProductResponse> searchProductForUser(String categorySlug, int page, int size, Map<String, String> filters) {
+    public PageResponse<ProductSearchResponse> searchProductForUser(String categorySlug, int page, int size, Map<String, String> filters) {
         page = Math.max(page - 1, 0);
-        
+
         List<String> brandSlugs = parseCommaSeparatedParam(filters.get("brands"));
         Boolean inStock = parseBooleanParam(filters.get("inStock"));
         Double priceMin = parseDoubleParam(filters.get("priceMin"));
         Double priceMax = parseDoubleParam(filters.get("priceMax"));
         String sortBy = filters.get("sortBy");
-        
-        // Parse filter value IDs from params
+
         List<Long> filterValueIds = null;
         String filterValuesParam = filters.get("filterValues");
         if (filterValuesParam != null && !filterValuesParam.trim().isEmpty()) {
@@ -328,23 +336,99 @@ public class ProductServiceImpl implements ProductService {
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .map(Long::parseLong)
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
             } catch (NumberFormatException e) {
-                // Invalid format, ignore
+                // ignore
             }
         }
-        
-        // Create Pageable with sorting
+
         Pageable pageable = createPageableWithSort(page, size, sortBy);
-        
+
         Page<Product> productPage = productRepository.findAll(
-            iuh.fit.ecommerce.specifications.ProductSpecification.filterProducts(
+            ProductSpecification.filterProducts(
                 categorySlug, brandSlugs, inStock, priceMin, priceMax, filterValueIds, sortBy
             ),
             pageable
         );
-        
-        return PageResponse.fromPage(productPage, productMapper::toResponse);
+
+        List<Product> content = productPage.getContent();
+        if (content.isEmpty()) {
+            return PageResponse.<ProductSearchResponse>builder()
+                .data(new ArrayList<>())
+                .page(page + 1)
+                .limit(productPage.getSize())
+                .totalItem(productPage.getTotalElements())
+                .totalPage(productPage.getTotalPages())
+                .build();
+        }
+
+        List<Long> productIds = content.stream().map(Product::getId).toList();
+        List<MinVariantPriceProjection> minRows = productVariantRepository.findMinPriceVariantByProductIds(productIds);
+        Map<Long, MinVariantPriceProjection> minRowByProductId = minRows.stream()
+            .collect(Collectors.toMap(MinVariantPriceProjection::getProductId, r -> r, (a, b) -> a));
+
+        List<SearchProductContext> contexts = new ArrayList<>();
+        for (Product p : content) {
+            MinVariantPriceProjection row = minRowByProductId.get(p.getId());
+            if (row == null) continue;
+            contexts.add(SearchProductContext.builder()
+                .productId(p.getId())
+                .brandId(row.getBrandId())
+                .categoryId(row.getCategoryId())
+                .variantId(row.getVariantId())
+                .originalPrice(row.getPrice())
+                .build());
+        }
+
+        Map<Long, DisplayPriceResult> displayPrices = promotionResolver.resolveDisplayPrices(contexts);
+
+        List<ProductSearchResponse> data = new ArrayList<>();
+        for (Product p : content) {
+            MinVariantPriceProjection row = minRowByProductId.get(p.getId());
+            DisplayPriceResult price = displayPrices.get(p.getId());
+            if (row == null || price == null) continue;
+
+            List<String> images = p.getProductImages() != null
+                ? p.getProductImages().stream().map(ProductImage::getUrl).filter(Objects::nonNull).toList()
+                : new ArrayList<>();
+            if (images.isEmpty() && p.getThumbnail() != null) {
+                images = List.of(p.getThumbnail());
+            }
+
+            BestVariantResponse bestVariant = BestVariantResponse.builder()
+                .id(row.getVariantId())
+                .price(price.getDisplayPrice())
+                .oldPrice(price.getOriginalPrice())
+                .discount(price.getDiscountPercent())
+                .sku(row.getSku())
+                .stock(row.getStock())
+                .build();
+
+            data.add(ProductSearchResponse.builder()
+                .id(p.getId())
+                .name(p.getName())
+                .slug(p.getSlug())
+                .thumbnail(p.getThumbnail())
+                .status(Boolean.TRUE.equals(p.getStatus()))
+                .rating(p.getRating())
+                .spu(p.getSpu())
+                .brandId(p.getBrand() != null ? p.getBrand().getId() : null)
+                .categoryId(p.getCategory() != null ? p.getCategory().getId() : null)
+                .productImages(images)
+                .originalPrice(price.getOriginalPrice())
+                .displayPrice(price.getDisplayPrice())
+                .discountPercent(price.getDiscountPercent())
+                .bestVariant(bestVariant)
+                .build());
+        }
+
+        return PageResponse.<ProductSearchResponse>builder()
+            .data(data)
+            .page(page + 1)
+            .limit(productPage.getSize())
+            .totalItem(productPage.getTotalElements())
+            .totalPage(productPage.getTotalPages())
+            .build();
     }
     
     private Pageable createPageableWithSort(int page, int size, String sortBy) {

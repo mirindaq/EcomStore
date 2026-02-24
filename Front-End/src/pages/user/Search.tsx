@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { Search as SearchIcon } from 'lucide-react';
 import { productService } from '@/services/product.service';
-import type { Product } from '@/types/product.type';
+import type { ProductSearchResponse } from '@/types/product.type';
 import Breadcrumb from '@/components/user/search/Breadcrumb';
 import SortSection from '@/components/user/search/SortSection';
 import ProductCard from '@/components/user/ProductCard';
@@ -30,7 +30,7 @@ export default function Search() {
   const { 
     data: productsData, 
     isLoading: productsLoading 
-  } = useQuery<{ data: { data: Product[], totalPage: number, totalItem: number } }>(
+  } = useQuery<{ data: { data: ProductSearchResponse[]; totalPage: number; totalItem: number } }>(
     () => productService.searchProductsWithElasticsearch(query, page, size, sortBy),
     {
       queryKey: ['search-products-elasticsearch', query, page.toString(), sortBy],

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card"; 
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Heart,
@@ -24,7 +24,7 @@ import { productQuestionService } from "@/services/productQuestion.service";
 import { feedbackService } from "@/services/feedback.service";
 import { categoryService } from "@/services/category.service";
 import { PUBLIC_PATH } from "@/constants/path";
-import type { Product, ProductVariantResponse } from "@/types/product.type";
+import type { Product, ProductSearchResponse, ProductVariantResponse } from "@/types/product.type";
 import type { Feedback, RatingStatistics } from "@/types/feedback.type";
 import { toast } from "sonner";
 import LoginModal from "@/components/user/LoginModal";
@@ -189,19 +189,19 @@ export default function ProductDetail() {
 
   const categorySlug = categoryData?.data?.slug || "";
 
-  // Load related products (same category)
+  // Load related products (same category) – API search theo category = best variant + promotion
   const { data: relatedProductsData, isLoading: relatedProductsLoading } = useQuery(
-    () => productService.getProducts(1, 5, { categoryId: product?.categoryId || null }),
+    () => productService.searchProducts(categorySlug, 1, 6, {}),
     {
-      queryKey: ["related-products", product?.categoryId?.toString() || ""],
-      enabled: !!product?.categoryId,
+      queryKey: ["related-products", categorySlug],
+      enabled: !!categorySlug,
       onError: (err) => {
         console.error("Error loading related products:", err);
       },
     }
   );
 
-  const relatedProducts: Product[] = (relatedProductsData?.data?.data || []).filter(
+  const relatedProducts: ProductSearchResponse[] = (relatedProductsData?.data?.data || []).filter(
     (p) => p.id !== product?.id
   ).slice(0, 5);
 
@@ -508,21 +508,18 @@ export default function ProductDetail() {
               <button
                 onClick={handleWishlistToggle}
                 disabled={isLoadingWishlist || productId === 0}
-                className={`flex items-center gap-1.5 transition-colors ${
-                  inWishlist ? "text-red-600" : "text-gray-600 hover:text-red-600"
-                } ${
-                  isLoadingWishlist
+                className={`flex items-center gap-1.5 transition-colors ${inWishlist ? "text-red-600" : "text-gray-600 hover:text-red-600"
+                  } ${isLoadingWishlist
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer"
-                }`}
+                  }`}
               >
                 {isLoadingWishlist ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Heart
-                    className={`w-4 h-4 ${
-                      inWishlist ? "fill-red-600 text-red-600" : ""
-                    }`}
+                    className={`w-4 h-4 ${inWishlist ? "fill-red-600 text-red-600" : ""
+                      }`}
                   />
                 )}
                 <span>Yêu thích</span>
@@ -577,11 +574,10 @@ export default function ProductDetail() {
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        index === currentImageIndex
-                          ? "border-red-600 ring-2 ring-red-200"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
+                      className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${index === currentImageIndex
+                        ? "border-red-600 ring-2 ring-red-200"
+                        : "border-gray-200 hover:border-gray-300"
+                        }`}
                     >
                       <img
                         src={image}
@@ -629,26 +625,32 @@ export default function ProductDetail() {
             {/* Right Column - Giá + Biến thể + Mua hàng */}
             <div className="lg:col-span-5 space-y-6">
               {/* Price Section */}
-              <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100">
-                <div className="flex items-baseline gap-3 mb-2">
-                  <span className="text-4xl font-bold text-red-600">
+              <div className="p-6 bg-gradient-to-br from-red-50/80 to-orange-50/80 rounded-2xl border border-red-100/80 shadow-sm">
+                <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
+                  <span className="text-3xl sm:text-4xl font-bold text-red-600 tracking-tight">
                     {formatPrice(selectedVariant?.price || 0)}
                   </span>
                   {selectedVariant && selectedVariant.discount > 0 && (
-                    <span className="text-xl text-gray-400 line-through">
-                      {formatPrice(selectedVariant.oldPrice)}
-                    </span>
+                    <>
+                      <span className="text-lg sm:text-xl text-gray-400 line-through">
+                        {formatPrice(selectedVariant.oldPrice)}
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold shadow-sm">
+                        Giảm {selectedVariant.discount}%
+                      </span>
+
+                    </>
                   )}
                 </div>
                 {selectedVariant && selectedVariant.discount > 0 && (
-                  <div className="text-sm text-gray-600">
-                    Tiết kiệm:{" "}
-                    <span className="font-semibold text-green-700">
+                  <p className="mt-2 text-sm text-gray-600 flex items-center gap-1.5">
+                    <span className="text-gray-500">Tiết kiệm</span>
+                    <span className="font-semibold text-emerald-600">
                       {formatPrice(
                         (selectedVariant.oldPrice || 0) - (selectedVariant?.price || 0)
                       )}
                     </span>
-                  </div>
+                  </p>
                 )}
               </div>
 
@@ -682,11 +684,10 @@ export default function ProductDetail() {
                           <button
                             key={value}
                             onClick={() => handleVariantSelection(variantName, value)}
-                            className={`px-4 py-2 text-sm rounded-lg border transition-all ${
-                              selectedVariants[variantName] === value
-                                ? "border-red-600 bg-red-50 text-red-700 font-medium"
-                                : "border-gray-200 hover:border-red-300 hover:bg-gray-50 text-gray-700"
-                            }`}
+                            className={`px-4 py-2 text-sm rounded-lg border transition-all ${selectedVariants[variantName] === value
+                              ? "border-red-600 bg-red-50 text-red-700 font-medium"
+                              : "border-gray-200 hover:border-red-300 hover:bg-gray-50 text-gray-700"
+                              }`}
                           >
                             {value}
                           </button>
@@ -776,7 +777,33 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Section 2: Sản phẩm tương tự */}
+        {/* Section 2: Chi tiết bên trái, Tin tức bên phải */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Left - Product Description */}
+          <div className="lg:col-span-2">
+            {product?.description && (
+              <div className="bg-white rounded-xl p-6 border border-gray-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-8 bg-gradient-to-b from-red-600 to-red-400 rounded-full" />
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">Mô tả sản phẩm</h2>
+                  </div>
+                </div>
+                <div
+                  className="article-content prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right - Related Articles */}
+          <div className="lg:col-span-1">
+            <ProductRelatedArticles articles={relatedArticles} isLoading={relatedArticlesLoading} />
+          </div>
+        </div>
+
+        {/* Section 3: Sản phẩm tương tự */}
         {relatedProducts.length > 0 && (
           <div className="bg-white rounded-xl p-6 mb-6 border border-gray-200">
             <div className="flex items-center justify-between mb-6">
@@ -815,32 +842,6 @@ export default function ProductDetail() {
           </div>
         )}
 
-        {/* Section 3: Chi tiết bên trái, Tin tức bên phải */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left - Product Description */}
-          <div className="lg:col-span-2">
-            {product?.description && (
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-1 h-8 bg-gradient-to-b from-red-600 to-red-400 rounded-full" />
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">Mô tả sản phẩm</h2>
-                  </div>
-                </div>
-                <div
-                  className="article-content prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Right - Related Articles */}
-          <div className="lg:col-span-1">
-            <ProductRelatedArticles articles={relatedArticles} isLoading={relatedArticlesLoading} />
-          </div>
-        </div>
-
         {/* Product Reviews Section */}
         <div id="reviews" className="bg-white rounded-xl p-6 mb-6 border border-gray-200 scroll-mt-4">
           <div className="flex items-center gap-3 mb-6">
@@ -870,11 +871,10 @@ export default function ProductDetail() {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                        className={`w-5 h-5 ${
-                          star <= Math.round(statistics.averageRating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
+                        className={`w-5 h-5 ${star <= Math.round(statistics.averageRating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                          }`}
                       />
                     ))}
                   </div>
@@ -897,11 +897,10 @@ export default function ProductDetail() {
                         <div
                           className="h-full bg-yellow-400 rounded-full transition-all"
                           style={{
-                            width: `${
-                              statistics.totalReviews > 0
-                                ? (count / statistics.totalReviews) * 100
-                                : 0
-                            }%`,
+                            width: `${statistics.totalReviews > 0
+                              ? (count / statistics.totalReviews) * 100
+                              : 0
+                              }%`,
                           }}
                         />
                       </div>
@@ -996,11 +995,10 @@ export default function ProductDetail() {
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                   key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= feedback.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
+                                  className={`w-4 h-4 ${star <= feedback.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                    }`}
                                 />
                               ))}
                             </div>
@@ -1008,10 +1006,10 @@ export default function ProductDetail() {
                           <div className="text-xs text-gray-500 mb-2">
                             {feedback.createdAt
                               ? new Date(feedback.createdAt).toLocaleDateString("vi-VN", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
                               : ""}
                           </div>
                           {feedback.comment && (

@@ -4,6 +4,7 @@ import type {
   ProductFilters,
   ProductListResponse,
   ProductResponse,
+  ProductSearchListResponse,
   ProductVariantDescriptionResponse,
   ProductVariantPromotionRequest,
   ProductVariantPromotionResponseApi,
@@ -69,7 +70,7 @@ export const productService = {
       size: size.toString(),
       ...filters
     })
-    const response = await axiosClient.get<ProductListResponse>(
+    const response = await axiosClient.get<ProductSearchListResponse>(
       `/products/search/${categorySlug}?${params.toString()}`
     )
     return response.data
@@ -84,7 +85,7 @@ export const productService = {
     if (sortBy) {
       params.set('sortBy', sortBy)
     }
-    const response = await axiosClient.get<ProductListResponse>(
+    const response = await axiosClient.get<ProductSearchListResponse>(
       `/products/search?${params.toString()}`
     )
     return response.data

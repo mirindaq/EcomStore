@@ -62,6 +62,32 @@ export type ProductVariantResponse = {
   productVariantValues: ProductVariantValueResponse[];
 };
 
+export type BestVariantResponse = {
+  id: number;
+  price: number;
+  oldPrice: number;
+  discount: number;
+  sku: string;
+  stock: number;
+};
+
+export type ProductSearchResponse = {
+  id: number;
+  name: string;
+  slug: string;
+  thumbnail: string;
+  status: boolean;
+  rating: number;
+  spu: string;
+  brandId: number;
+  categoryId: number;
+  productImages: string[];
+  originalPrice: number;
+  displayPrice: number;
+  discountPercent: number;
+  bestVariant: BestVariantResponse;
+};
+
 export type ProductVariantValueResponse = {
   id: number;
   variantValue: VariantValue;
@@ -100,5 +126,6 @@ export type ProductFilters = {
 
 export type ProductResponse = ResponseApi<Product>;
 export type ProductListResponse = ResponseApiWithPagination<Product[]>;
+export type ProductSearchListResponse = ResponseApiWithPagination<ProductSearchResponse[]>;
 export type ProductVariantDescriptionResponse = ResponseApi<ProductVariantDescription[]>;
 export type ProductVariantPromotionResponseApi = ResponseApi<ProductVariantPromotionResponse[]>;

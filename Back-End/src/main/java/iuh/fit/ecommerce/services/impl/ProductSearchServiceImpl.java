@@ -3,19 +3,24 @@ package iuh.fit.ecommerce.services.impl;
 import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import iuh.fit.ecommerce.dtos.request.search.SearchProductContext;
 import iuh.fit.ecommerce.dtos.response.base.PageResponse;
+import iuh.fit.ecommerce.dtos.response.product.BestVariantResponse;
+import iuh.fit.ecommerce.dtos.response.product.DisplayPriceResult;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
+import iuh.fit.ecommerce.dtos.response.product.ProductSearchResponse;
+import iuh.fit.ecommerce.dtos.projection.MinVariantPriceProjection;
 import iuh.fit.ecommerce.entities.Product;
-import iuh.fit.ecommerce.entities.ProductImage;
 import iuh.fit.ecommerce.entities.ProductVariant;
 import iuh.fit.ecommerce.entities.elasticsearch.ProductDocument;
 import iuh.fit.ecommerce.mappers.ProductDocumentMapper;
 import iuh.fit.ecommerce.mappers.ProductMapper;
 import iuh.fit.ecommerce.repositories.ProductRepository;
+import iuh.fit.ecommerce.repositories.ProductVariantRepository;
 import iuh.fit.ecommerce.repositories.elasticsearch.ProductSearchRepository;
 import iuh.fit.ecommerce.exceptions.ErrorCode;
 import iuh.fit.ecommerce.services.ProductSearchService;
-import iuh.fit.ecommerce.services.PromotionService;
+import iuh.fit.ecommerce.services.PromotionResolver;
 import iuh.fit.ecommerce.utils.ProductHelper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -52,14 +57,15 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     
     private final ProductSearchRepository productSearchRepository;
     private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final ProductMapper productMapper;
     private final ElasticsearchOperations elasticsearchOperations;
-    private final PromotionService promotionService;
+    private final PromotionResolver promotionResolver;
     private final ProductDocumentMapper productDocumentMapper;
     private final ProductHelper productHelper;
 
     @Override
-    public PageResponse<ProductResponse> searchProducts(
+    public PageResponse<ProductSearchResponse> searchProducts(
             String query,
             int page,
             int size,
@@ -223,9 +229,8 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             SearchHits<ProductDocument> searchHits =
                     elasticsearchOperations.search(searchQuery, ProductDocument.class);
 
-            List<Long> productIds = searchHits
-                    .getSearchHits()
-                    .stream()
+            List<SearchHit<ProductDocument>> hits = searchHits.getSearchHits();
+            List<Long> productIds = hits.stream()
                     .map(hit -> hit.getContent().getProductId())
                     .filter(Objects::nonNull)
                     .distinct()
@@ -234,76 +239,81 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             logger.debug("Found {} product IDs from Elasticsearch", productIds.size());
 
             if (productIds.isEmpty()) {
-                return PageResponse.<ProductResponse>builder()
+                long totalItem = searchHits.getTotalHits();
+                return PageResponse.<ProductSearchResponse>builder()
                         .data(new ArrayList<>())
                         .page(page + 1)
                         .limit(size)
-                        .totalItem(0)
-                        .totalPage(0)
+                        .totalItem(totalItem)
+                        .totalPage((int) Math.ceil((double) totalItem / size))
                         .build();
             }
 
-            // -----------------------------
-            // Lấy dữ liệu từ DB (giữ nguyên thứ tự từ Elasticsearch)
-            // -----------------------------
-            List<Product> found = productRepository.findAllById(productIds);
+            // Batch load min variant per product (single query)
+            List<MinVariantPriceProjection> minRows = productVariantRepository.findMinPriceVariantByProductIds(productIds);
+            Map<Long, MinVariantPriceProjection> minRowByProductId = minRows.stream()
+                    .collect(Collectors.toMap(MinVariantPriceProjection::getProductId, r -> r, (a, b) -> a));
 
-            Map<Long, Product> map = found.stream()
-                    .filter(p -> p.getStatus() != null && p.getStatus())
-                    .collect(Collectors.toMap(Product::getId, p -> p, (p1, p2) -> p1));
-
-            // Giữ nguyên thứ tự từ Elasticsearch
-            List<Product> ordered = new ArrayList<>();
-            for (Long id : productIds) {
-                Product product = map.get(id);
-                if (product != null) {
-                    ordered.add(product);
-                }
+            // Build contexts for PromotionResolver
+            List<SearchProductContext> contexts = new ArrayList<>();
+            for (SearchHit<ProductDocument> hit : hits) {
+                ProductDocument doc = hit.getContent();
+                Long pid = doc.getProductId();
+                MinVariantPriceProjection row = minRowByProductId.get(pid);
+                if (row == null) continue;
+                contexts.add(SearchProductContext.builder()
+                        .productId(pid)
+                        .brandId(doc.getBrandId())
+                        .categoryId(doc.getCategoryId())
+                        .variantId(row.getVariantId())
+                        .originalPrice(row.getPrice())
+                        .build());
             }
 
-            // Nếu có query và không có sortBy cụ thể, sắp xếp lại theo relevance
-            if (hasQuery && !hasCustomSort && ordered.size() > 1) {
-                String searchText = query.trim().toLowerCase();
-                String[] queryWords = searchText.split("\\s+");
+            Map<Long, DisplayPriceResult> displayPrices = promotionResolver.resolveDisplayPrices(contexts);
 
-                ordered.sort((p1, p2) -> {
-                    String name1 = (p1.getName() != null ? p1.getName() : "").toLowerCase();
-                    String name2 = (p2.getName() != null ? p2.getName() : "").toLowerCase();
+            // Build ProductSearchResponse preserving ES order
+            List<ProductSearchResponse> data = new ArrayList<>();
+            for (SearchHit<ProductDocument> hit : hits) {
+                ProductDocument doc = hit.getContent();
+                Long pid = doc.getProductId();
+                MinVariantPriceProjection row = minRowByProductId.get(pid);
+                DisplayPriceResult price = displayPrices.get(pid);
+                if (row == null || price == null) continue;
 
-                    int score1 = calculateRelevanceScore(name1, searchText, queryWords);
-                    int score2 = calculateRelevanceScore(name2, searchText, queryWords);
+                BestVariantResponse bestVariant = BestVariantResponse.builder()
+                        .id(row.getVariantId())
+                        .price(price.getDisplayPrice())
+                        .oldPrice(price.getOriginalPrice())
+                        .discount(price.getDiscountPercent())
+                        .sku(row.getSku())
+                        .stock(row.getStock())
+                        .build();
 
-                    int compare = Integer.compare(score2, score1);
-                    if (compare == 0) {
-                        // Nếu relevance bằng nhau, sắp xếp theo rating
-                        double rating1 = p1.getRating() != null ? p1.getRating() : 0.0;
-                        double rating2 = p2.getRating() != null ? p2.getRating() : 0.0;
-                        return Double.compare(rating2, rating1);
-                    }
-                    return compare;
-                });
+                List<String> images = doc.getThumbnail() != null ? List.of(doc.getThumbnail()) : List.of();
+                data.add(ProductSearchResponse.builder()
+                        .id(pid)
+                        .name(doc.getName())
+                        .slug(doc.getSlug())
+                        .thumbnail(doc.getThumbnail())
+                        .status(Boolean.TRUE.equals(doc.getStatus()))
+                        .rating(doc.getRating())
+                        .spu(doc.getSpu())
+                        .brandId(doc.getBrandId())
+                        .categoryId(doc.getCategoryId())
+                        .productImages(images)
+                        .originalPrice(price.getOriginalPrice())
+                        .displayPrice(price.getDisplayPrice())
+                        .discountPercent(price.getDiscountPercent())
+                        .bestVariant(bestVariant)
+                        .build());
             }
-
-            List<ProductResponse> productResponses = ordered.stream()
-                    .map(promotionService::addPromotionToProductResponseByProduct)
-                    .collect(Collectors.toList());
 
             long totalItem = searchHits.getTotalHits();
-            
-            // Phát hiện Elasticsearch index không đồng bộ với DB
-            if (totalItem > 0 && productResponses.isEmpty()) {
-                logger.warn("Elasticsearch index out of sync! Found {} hits in ES but 0 valid products in DB. " +
-                        "Please run reindex to sync Elasticsearch with Database.", totalItem);
-                totalItem = 0;
-            } else if (productResponses.size() < productIds.size()) {
-                logger.warn("Elasticsearch index partially out of sync! {} products from ES, {} valid in DB. " +
-                        "Consider running reindex.", productIds.size(), productResponses.size());
-            }
-            
             int totalPages = (int) Math.ceil((double) totalItem / size);
 
-            return PageResponse.<ProductResponse>builder()
-                    .data(productResponses)
+            return PageResponse.<ProductSearchResponse>builder()
+                    .data(data)
                     .page(page + 1)
                     .limit(size)
                     .totalItem(totalItem)

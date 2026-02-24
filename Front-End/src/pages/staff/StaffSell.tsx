@@ -4,7 +4,7 @@ import { orderService } from '@/services/order.service'
 import { customerService } from '@/services/customer.service'
 import { voucherService } from '@/services/voucher.service'
 import { useQuery } from '@/hooks'
-import type { Product, ProductVariantResponse } from '@/types/product.type'
+import type { Product, ProductSearchResponse, ProductVariantResponse } from '@/types/product.type'
 import type { StaffOrderCreationRequest, PaymentMethod } from '@/types/order.type'
 import type { VoucherAvailableResponse } from '@/types/voucher.type'
 import { toast } from 'sonner'
@@ -31,7 +31,7 @@ interface CartItem {
 
 export default function StaffSell() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [searchResults, setSearchResults] = useState<ProductSearchResponse[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [cart, setCart] = useState<CartItem[]>([])
   const [showVariantModal, setShowVariantModal] = useState(false)
@@ -192,13 +192,16 @@ export default function StaffSell() {
     }
   }
 
-  const handleProductClick = (product: Product) => {
-    if (!product.variants || product.variants.length === 0) {
+  const handleProductClick = (product: Product | ProductSearchResponse) => {
+    const isSearch = 'bestVariant' in product && product.bestVariant != null
+    const variants = isSearch
+      ? [{ ...product.bestVariant, productVariantValues: [] }]
+      : (product as Product).variants
+    if (!variants || variants.length === 0) {
       toast.error('Sản phẩm không có biến thể')
       return
     }
-
-    setSelectedProduct(product)
+    setSelectedProduct({ ...product, variants } as Product)
     setShowVariantModal(true)
   }
 

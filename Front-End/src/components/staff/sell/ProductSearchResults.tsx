@@ -1,11 +1,12 @@
 import { CustomBadge } from '@/components/ui/CustomBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Product } from '@/types/product.type'
+import type {  ProductSearchResponse } from '@/types/product.type'
+
 
 interface ProductSearchResultsProps {
-  products: Product[]
+  products: ProductSearchResponse[]
   formatPrice: (price: number) => string
-  onProductClick: (product: Product) => void
+  onProductClick: (product: ProductSearchResponse) => void
 }
 
 export default function ProductSearchResults({
@@ -25,7 +26,8 @@ export default function ProductSearchResults({
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[700px] overflow-y-auto pr-2">
           {products.map((product) => {
-            const firstVariant = product.variants?.[0]
+            const price = product.displayPrice ?? 0
+            const oldPrice = product.originalPrice ?? 0
 
             return (
               <div
@@ -39,9 +41,9 @@ export default function ProductSearchResults({
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   />
-                  {firstVariant && firstVariant.oldPrice > firstVariant.price && (
+                  {oldPrice > price && (
                     <CustomBadge variant="error" size="sm" className="absolute top-2 left-2 text-white">
-                      -{Math.round((1 - firstVariant.price / firstVariant.oldPrice) * 100)}%
+                      -{Math.round((1 - price / oldPrice) * 100)}%
                     </CustomBadge>
                   )}
                 </div>
@@ -51,17 +53,14 @@ export default function ProductSearchResults({
                   </h4>
                   <div className="flex flex-col gap-1">
                     <span className="text-base font-bold text-red-600">
-                      {formatPrice(firstVariant?.price || 0)}
+                      {formatPrice(price)}
                     </span>
-                    {firstVariant && firstVariant.oldPrice > firstVariant.price && (
+                    {oldPrice > 0 && (
                       <span className="text-xs text-gray-400 line-through">
-                        {formatPrice(firstVariant.oldPrice)}
+                        {formatPrice(oldPrice)}
                       </span>
                     )}
                   </div>
-                  <CustomBadge variant="secondary" size="sm">
-                    {product.variants?.length || 0} biến thể
-                  </CustomBadge>
                 </div>
               </div>
             )

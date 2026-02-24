@@ -6,21 +6,24 @@ import lombok.Setter;
 
 import java.util.List;
 
+
 @Getter
 @Setter
 @Builder
-public class ProductResponse {
+public class ProductSearchResponse {
     private Long id;
     private String name;
     private String slug;
-    private String description;
     private String thumbnail;
-    private boolean status;
+    private Boolean status;
     private Double rating;
     private String spu;
     private Long brandId;
     private Long categoryId;
     private List<String> productImages;
-    private List<ProductAttributeResponse> attributes;
-    private List<ProductVariantResponse> variants;
+
+    private Double originalPrice;
+    private Double displayPrice;
+    private Double discountPercent;
+    private BestVariantResponse bestVariant;
 }

@@ -5,6 +5,7 @@ import iuh.fit.ecommerce.dtos.request.product.ProductVariantPromotionRequest;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
 import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
+import iuh.fit.ecommerce.dtos.response.product.ProductSearchResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantDescriptionResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductVariantPromotionResponse;
 import iuh.fit.ecommerce.services.ProductService;
@@ -123,7 +124,7 @@ public class ProductController {
     }
 
     @GetMapping("/search/{categorySlug}")
-    public ResponseEntity<ResponseSuccess<PageResponse<ProductResponse>>> searchProductByCategory(
+    public ResponseEntity<ResponseSuccess<PageResponse<ProductSearchResponse>>> searchProductByCategory(
             @PathVariable String categorySlug,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,
@@ -131,7 +132,6 @@ public class ProductController {
     ){
         allParams.remove("page");
         allParams.remove("size");
-        // sortBy will be kept in allParams
         
         return ResponseEntity.ok(new ResponseSuccess<>(
                 OK,
@@ -141,7 +141,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseSuccess<PageResponse<ProductResponse>>> searchProductsWithElasticsearch(
+    public ResponseEntity<ResponseSuccess<PageResponse<ProductSearchResponse>>> searchProductsWithElasticsearch(
             @RequestParam String query,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size,

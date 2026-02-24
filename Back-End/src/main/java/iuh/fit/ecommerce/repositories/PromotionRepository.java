@@ -96,4 +96,30 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long>, Jpa
             Pageable pageable
     );
 
+    @Query("""
+    SELECT DISTINCT p FROM Promotion p
+    LEFT JOIN FETCH p.promotionTargets pt
+    LEFT JOIN FETCH pt.productVariant
+    LEFT JOIN FETCH pt.product
+    LEFT JOIN FETCH pt.category
+    LEFT JOIN FETCH pt.brand
+    WHERE p.active = true
+      AND (p.startDate IS NULL OR p.startDate <= CURRENT_DATE)
+      AND (p.endDate IS NULL OR p.endDate >= CURRENT_DATE)
+      AND (
+        pt.productVariant.id IN :variantIds OR
+        pt.product.id IN :productIds OR
+        pt.category.id IN :categoryIds OR
+        pt.brand.id IN :brandIds OR
+        p.promotionType = iuh.fit.ecommerce.enums.PromotionType.ALL
+      )
+    ORDER BY p.priority ASC, p.discount DESC
+    """)
+    List<Promotion> findValidPromotionsWithTargetsForDisplayPrice(
+            @Param("variantIds") List<Long> variantIds,
+            @Param("productIds") List<Long> productIds,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("brandIds") List<Long> brandIds
+    );
+
 }

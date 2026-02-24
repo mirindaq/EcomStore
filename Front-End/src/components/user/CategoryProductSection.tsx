@@ -6,7 +6,7 @@ import ProductCard from '@/components/user/ProductCard'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChevronRight } from 'lucide-react'
-import type { Product } from '@/types/product.type'
+import type { ProductSearchResponse } from '@/types/product.type'
 import type { Brand } from '@/types/brand.type'
 import type { Category } from '@/types/category.type'
 
@@ -23,7 +23,7 @@ interface CategoryProductSectionProps {
 }
 
 export default function CategoryProductSection({ category, sideBanners }: CategoryProductSectionProps) {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductSearchResponse[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -42,14 +42,12 @@ export default function CategoryProductSection({ category, sideBanners }: Catego
     }
   }, [category.slug])
 
-  // Fetch products by category
+  // Fetch products by category (search API = best variant + promotion)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const response = await productService.getProducts(1, 8, {
-          categoryId: category.id,
-        })
+        const response = await productService.searchProducts(category.slug, 1, 8, {})
         setProducts(response.data?.data || [])
       } catch (error) {
         console.error('Error fetching products:', error)
@@ -57,8 +55,10 @@ export default function CategoryProductSection({ category, sideBanners }: Catego
         setLoading(false)
       }
     }
-    fetchProducts()
-  }, [category.id])
+    if (category.slug) {
+      fetchProducts()
+    }
+  }, [category.slug])
 
   // Default side banners with images - chỉ 2 banner
   const defaultBanners = [

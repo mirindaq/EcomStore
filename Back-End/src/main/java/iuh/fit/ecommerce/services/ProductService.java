@@ -4,6 +4,7 @@ import iuh.fit.ecommerce.dtos.request.product.ProductAddRequest;
 import iuh.fit.ecommerce.dtos.request.product.ProductUpdateRequest;
 import iuh.fit.ecommerce.dtos.response.base.PageResponse;
 import iuh.fit.ecommerce.dtos.response.product.ProductResponse;
+import iuh.fit.ecommerce.dtos.response.product.ProductSearchResponse;
 import iuh.fit.ecommerce.entities.Product;
 
 import java.util.List;
@@ -21,5 +22,5 @@ public interface ProductService {
 
     Product getProductEntityBySlug(String slug);
 
-    PageResponse<ProductResponse> searchProductForUser(String categorySlug, int page, int size, Map<String, String> filters);
+    PageResponse<ProductSearchResponse> searchProductForUser(String categorySlug, int page, int size, Map<String, String> filters);
 }
