@@ -9,11 +9,9 @@ import java.util.Optional;
 
 public interface ProductSearchService {
 
-    /** Load product đầy đủ cho indexing trong 1 transaction (4 round-trips DB, 1 entity). */
     Optional<Product> loadProductForIndexing(Long productId);
 
     PageResponse<ProductSearchResponse> searchProducts(String query, int page, int size, String sortBy);
-    
 
     List<String> getAutoCompleteSuggestions(String query, int limit);
     

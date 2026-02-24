@@ -137,7 +137,6 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                     // Có query: ưu tiên relevance score
                     sortOptionsList.add(SortOptions.of(s -> s.score(sc -> sc.order(SortOrder.Desc))));
                 }
-                // Luôn thêm rating làm secondary sort
                 sortOptionsList.add(SortOptions.of(s -> s
                         .field(FieldSort.of(f -> f
                                 .field("rating")
@@ -217,9 +216,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
                     );
 
             // Thêm sort options vào query builder
-            if (!sortOptionsList.isEmpty()) {
-                queryBuilder.withSort(sortOptionsList);
-            }
+            queryBuilder.withSort(sortOptionsList);
 
             NativeQuery searchQuery = queryBuilder.build();
 
@@ -492,181 +489,5 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
         } while (productPage.hasNext());
     }
-    
-    /**
-     * Tính điểm khớp của text với query tìm kiếm
-     * Điểm càng cao = khớp càng tốt
-     */
-    private int calculateRelevanceScore(String text, String fullQuery, String[] queryWords) {
-        if (text == null || text.isEmpty()) {
-            return 0;
-        }
-        
-        int score = 0;
-        
-        // Ưu tiên cao nhất: text chứa đầy đủ cụm từ tìm kiếm (exact phrase match)
-        if (text.contains(fullQuery)) {
-            score += 1000;
-        }
-        
-        // Ưu tiên cao: text bắt đầu với query
-        if (text.startsWith(fullQuery)) {
-            score += 500;
-        }
-        
-        // Đếm số từ trong query có trong text
-        int matchedWords = 0;
-        for (String word : queryWords) {
-            if (text.contains(word)) {
-                matchedWords++;
-                // Ưu tiên các từ dài hơn
-                score += word.length() * 10;
-            }
-        }
-        
-        // Ưu tiên các text có nhiều từ khớp hơn
-        score += matchedWords * 50;
-        
-        // Ưu tiên các text có tỷ lệ từ khớp cao hơn
-        if (queryWords.length > 0) {
-            double matchRatio = (double) matchedWords / queryWords.length;
-            score += (int) (matchRatio * 100);
-        }
-        
-        return score;
-    }
-    
-    /**
-     * Lấy giá nhỏ nhất của sản phẩm từ variants
-     */
-    private Double getMinPrice(Product product) {
-        if (product.getProductVariants() == null || product.getProductVariants().isEmpty()) {
-            return null;
-        }
-        return product.getProductVariants().stream()
-                .filter(v -> v.getPrice() != null)
-                .map(ProductVariant::getPrice)
-                .min(Double::compareTo)
-                .orElse(null);
-    }
-    
-    private ProductDocument convertToDocument(Product product) {
-        // Calculate min and max prices from variants, and total stock
-        Double minPrice = null;
-        Double maxPrice = null;
-        Integer totalStock = 0;
-        List<String> variantSkus = new ArrayList<>();
-        List<String> variantValues = new ArrayList<>();
-        
-        if (product.getProductVariants() != null && !product.getProductVariants().isEmpty()) {
-            List<Double> prices = new ArrayList<>();
-            
-            for (ProductVariant variant : product.getProductVariants()) {
-                // Collect prices
-                if (variant.getPrice() != null) {
-                    prices.add(variant.getPrice());
-                }
-                
-                // Sum up stock from all variants
-                if (variant.getStock() != null) {
-                    totalStock += variant.getStock();
-                }
-                
-                // Collect SKUs
-                if (variant.getSku() != null && !variant.getSku().isEmpty()) {
-                    variantSkus.add(variant.getSku());
-                }
-                
-                // Collect variant values (e.g., "Red", "Large", "128GB")
-                if (variant.getProductVariantValues() != null) {
-                    for (var pvv : variant.getProductVariantValues()) {
-                        if (pvv.getVariantValue() != null) {
-                            String variantValue = pvv.getVariantValue().getValue();
-                            if (variantValue != null && !variantValue.isEmpty()) {
-                                variantValues.add(variantValue);
-                            }
-                        }
-                    }
-                }
-            }
-            
-            if (!prices.isEmpty()) {
-                minPrice = prices.stream().min(Double::compareTo).orElse(null);
-                maxPrice = prices.stream().max(Double::compareTo).orElse(null);
-            }
-        }
 
-        
-        // Collect attribute names and values
-        List<String> attributeNames = new ArrayList<>();
-        List<String> attributeValues = new ArrayList<>();
-        if (product.getAttributes() != null) {
-            for (var attrValue : product.getAttributes()) {
-                if (attrValue.getAttribute() != null && attrValue.getAttribute().getName() != null) {
-                    attributeNames.add(attrValue.getAttribute().getName());
-                }
-                if (attrValue.getValue() != null && !attrValue.getValue().isEmpty()) {
-                    attributeValues.add(attrValue.getValue());
-                }
-            }
-        }
-
-        // Collect filter values
-        List<String> filterValues = new ArrayList<>();
-        if (product.getProductFilterValues() != null) {
-            for (var pfv : product.getProductFilterValues()) {
-                if (pfv.getFilterValue() != null && pfv.getFilterValue().getValue() != null) {
-                    filterValues.add(pfv.getFilterValue().getValue());
-                }
-            }
-        }
-
-        // Build searchable text - include all searchable content
-        List<String> searchableText = new ArrayList<>();
-        if (product.getName() != null) {
-            searchableText.add(product.getName());
-        }
-        if (product.getDescription() != null) {
-            searchableText.add(product.getDescription());
-        }
-        if (product.getBrand() != null && product.getBrand().getName() != null) {
-            searchableText.add(product.getBrand().getName());
-        }
-        if (product.getCategory() != null && product.getCategory().getName() != null) {
-            searchableText.add(product.getCategory().getName());
-        }
-
-        searchableText.addAll(variantValues);
-
-        searchableText.addAll(attributeValues);
-
-        searchableText.addAll(filterValues);
-
-        searchableText.addAll(variantSkus);
-        
-        return ProductDocument.builder()
-            .id(String.valueOf(product.getId()))
-            .productId(product.getId())
-            .name(product.getName())
-            .slug(product.getSlug())
-            .thumbnail(product.getThumbnail())
-            .rating(product.getRating())
-            .stock(totalStock)
-            .status(product.getStatus())
-            .spu(product.getSpu())
-            .brandId(product.getBrand() != null ? product.getBrand().getId() : null)
-            .brandName(product.getBrand() != null ? product.getBrand().getName() : null)
-            .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
-            .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
-            .categorySlug(product.getCategory() != null ? product.getCategory().getSlug() : null)
-            .minPrice(minPrice)
-            .maxPrice(maxPrice)
-            .searchableText(searchableText)
-            .variantSkus(variantSkus)
-            .variantValues(variantValues)
-            .attributeNames(attributeNames)
-            .attributeValues(attributeValues)
-            .filterValues(filterValues)
-            .build();
-    }
 }
