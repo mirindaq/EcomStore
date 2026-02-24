@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Checked out from ${env.GIT_URL}"
+                echo "Checked out a from ${env.GIT_URL}"
             }
         }
 
