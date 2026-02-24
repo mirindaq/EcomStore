@@ -62,16 +62,16 @@ spring:
             user-info-uri: ${GOOGLE_USER_INFO_URI}
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin
+    host: ${SPRING_RABBITMQ_HOST}
+    port: ${SPRING_RABBITMQ_PORT}
+    username: ${SPRING_RABBITMQ_USERNAME}
+    password: ${SPRING_RABBITMQ_PASSWORD}
     listener:
       simple:
         retry:
-          enabled: true
-          max-attempts: 5
-          initial-interval: 3000
+          enabled: ${SPRING_RABBITMQ_LISTENER_RETRY_ENABLED}
+          max-attempts: ${SPRING_RABBITMQ_LISTENER_RETRY_MAX_ATTEMPTS}
+          initial-interval: ${SPRING_RABBITMQ_LISTENER_RETRY_INITIAL_INTERVAL}
   ai:
     google:
       genai:
