@@ -28,7 +28,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8081:8080"
+      - "8080"
     depends_on:
       mysql:
         condition: service_healthy
@@ -108,8 +108,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000"
+      - "9001"
     volumes:
       - minio_data:/data
     networks:
@@ -143,8 +143,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672"
+      - "15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
