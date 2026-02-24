@@ -1,24 +1,19 @@
-
-FROM node:20-alpine AS build
+FROM node:20-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm ci
 
 COPY . .
 
-ENV VITE_API_BASE_URL=https://api.mirindaq-dev.shop/api/v1
-ENV VITE_WS_BASE_URL=https://api.mirindaq-dev.shop/ws
+ARG VITE_API_BASE_URL=http://localhost:8080/api/v1
+ARG VITE_WS_BASE_URL=http://localhost:8080/ws
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_WS_BASE_URL=$VITE_WS_BASE_URL
 
 RUN npm run build
 
-FROM nginx:alpine
-
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npx", "serve", "-s", "dist", "-l", "80"]
