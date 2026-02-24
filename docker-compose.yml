@@ -40,6 +40,8 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     restart: always
     volumes:
       - ecomstore_uploads:/app/uploads
@@ -133,6 +135,27 @@ services:
       interval: 10s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ecomstore-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ecomstore-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
 networks:
   ecomstore-network:
     driver: bridge
@@ -143,5 +166,6 @@ volumes:
   qdrant_data:
   minio_data:
   redis_data:
+  rabbitmq_data:
   ecomstore_uploads:
   ecomstore_logs:
