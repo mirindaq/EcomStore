@@ -532,7 +532,6 @@ public class DashboardExcelService {
             row.createCell(2).setCellValue(product.getSpu() != null ? product.getSpu() : "");
             
             Cell stockCell = row.createCell(3);
-            stockCell.setCellValue(product.getStock() != null ? product.getStock() : 0);
             stockCell.setCellStyle(numberStyle);
             
             row.createCell(4).setCellValue(product.isStatus() ? "Hoạt động" : "Ngừng hoạt động");

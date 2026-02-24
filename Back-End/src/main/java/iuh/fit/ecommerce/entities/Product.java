@@ -23,9 +23,6 @@ public class Product extends BaseEntity {
     private String name;
 
     @Column
-    private Integer stock;
-
-    @Column
     private Double discount;
 
     @Column( columnDefinition = "LONGTEXT")
@@ -62,18 +59,21 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Builder.Default
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL ,orphanRemoval = true)
     private List<ProductAttributeValue> attributes = new ArrayList<>();
 
-
+    @Builder.Default
     @OneToMany(mappedBy = "product",
             fetch = FetchType.LAZY,
             cascade = { CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<ProductImage> productImages = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL ,orphanRemoval = true)
     private List<ProductVariant> productVariants = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductFilterValue> productFilterValues = new ArrayList<>();
 }

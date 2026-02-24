@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -426,15 +427,20 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     
     @Override
     @Transactional
+    public Optional<Product> loadProductForIndexing(Long productId) {
+        Product p = productRepository.findForIndexing(productId).orElse(null);
+        if (p == null) return Optional.empty();
+        productRepository.findForIndexingWithAttributes(productId);
+        productRepository.findForIndexingWithProductFilterValues(productId);
+        productRepository.findForIndexingWithProductImages(productId);
+        return Optional.of(p);
+    }
+
+    @Override
+    @Transactional
     public void indexProduct(Product product) {
-        Product fullProduct = productRepository
-                .findForIndexing(product.getId())
-                .orElseThrow(() ->
-                        new RuntimeException("Product not found"));
-
         ProductDocument document =
-                productDocumentMapper.toDocument(fullProduct,productHelper);
-
+                productDocumentMapper.toDocument(product, productHelper);
         productSearchRepository.save(document);
     }
 

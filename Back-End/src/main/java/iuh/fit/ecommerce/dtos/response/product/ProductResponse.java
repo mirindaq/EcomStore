@@ -13,7 +13,6 @@ public class ProductResponse {
     private Long id;
     private String name;
     private String slug;
-    private Integer stock;
 //    private Double discount;
     private String description;
     private String thumbnail;
