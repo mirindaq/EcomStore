@@ -20,7 +20,7 @@ import { cartService } from "@/services/cart.service";
 import { productService } from "@/services/product.service";
 import { categoryService } from "@/services/category.service";
 import type { Cart } from "@/types/cart.type";
-import type { Product } from "@/types/product.type";
+import type { ProductSearchListResponse } from "@/types/product.type";
 import type { CategoryListResponse } from "@/types/category.type";
 import { PUBLIC_PATH } from "@/constants/path";
 import { Button } from "@/components/ui/button";
@@ -187,9 +187,7 @@ export default function Header() {
   );
 
   // Search products with debounce
-  const { data: searchResultsData, isLoading: isSearching } = useQuery<{
-    data: { data: Product[]; totalItem: number };
-  }>(
+  const { data: searchResultsData, isLoading: isSearching } = useQuery<ProductSearchListResponse>(
     () => productService.searchProductsWithElasticsearch(debouncedSearch, 1, 5, "popular"),
     {
       queryKey: ["header-search", debouncedSearch],
@@ -417,18 +415,16 @@ export default function Header() {
                                   <p className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
                                     {product.name}
                                   </p>
-                                  {product.variants && product.variants.length > 0 && (
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <span className="text-sm font-semibold text-red-600">
-                                        {formatPrice(product.variants[0].price)}đ
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    <span className="text-sm font-semibold text-red-600">
+                                      {formatPrice(product.displayPrice ?? 0)}
+                                    </span>
+                                    {(product.discountPercent ?? 0) > 0 && (product.originalPrice ?? 0) > (product.displayPrice ?? 0) && (
+                                      <span className="text-xs text-gray-400 line-through">
+                                        {formatPrice(product.originalPrice ?? 0)}
                                       </span>
-                                      {product.variants[0].oldPrice && product.variants[0].oldPrice > product.variants[0].price && (
-                                        <span className="text-xs text-gray-400 line-through">
-                                          {formatPrice(product.variants[0].oldPrice)}đ
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
                               </button>
                             ))}
