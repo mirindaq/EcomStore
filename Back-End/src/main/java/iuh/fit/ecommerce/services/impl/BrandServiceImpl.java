@@ -1,6 +1,7 @@
 package iuh.fit.ecommerce.services.impl;
 
 import iuh.fit.ecommerce.services.CategoryBrandService;
+import iuh.fit.ecommerce.services.UploadService;
 import iuh.fit.ecommerce.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class BrandServiceImpl implements BrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
     private final CategoryBrandService categoryBrandService;
+    private final UploadService uploadService;
 
     @Override
     @Transactional
@@ -67,6 +69,17 @@ public class BrandServiceImpl implements BrandService {
         validateBrandName(request.getName(), brand);
         mapRequestToBrand(brand, request);
         brandRepository.save(brand);
+
+        String oldThumbnail = brand.getImage();
+        String newThumbnail = request.getImage();
+        if (oldThumbnail != null && !oldThumbnail.isEmpty()
+                && !oldThumbnail.equals(newThumbnail)) {
+            try {
+                uploadService.deleteFile(oldThumbnail);
+            } catch (Exception e) {
+                // Log lỗi nhưng không throw để không block việc update
+            }
+        }
         return brandMapper.toResponse(brand);
     }
 

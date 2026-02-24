@@ -1,5 +1,6 @@
 package iuh.fit.ecommerce.services.impl;
 
+import iuh.fit.ecommerce.services.UploadService;
 import iuh.fit.ecommerce.utils.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final AttributeRepository attributeRepository;
     private final CategoryMapper categoryMapper;
+    private final UploadService uploadService;
 
     @Override
     @Transactional
@@ -79,6 +81,17 @@ public class CategoryServiceImpl implements CategoryService {
         category.setAttributes(processAttributes(category, request.getAttributes(), category.getAttributes()));
 
         categoryRepository.save(category);
+
+        String oldThumbnail = category.getImage();
+        String newThumbnail = request.getImage();
+        if (oldThumbnail != null && !oldThumbnail.isEmpty()
+                && !oldThumbnail.equals(newThumbnail)) {
+            try {
+                uploadService.deleteFile(oldThumbnail);
+            } catch (Exception e) {
+                // Log lỗi nhưng không throw để không block việc update
+            }
+        }
 
         return categoryMapper.toResponse(category);
     }
