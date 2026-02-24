@@ -18,18 +18,22 @@ pipeline {
             }
         }
 
-        stage('Prepare env files') {
+        stage('Prepare ENV') {
             steps {
                 sh '''
-                    mkdir -p Back-End
+                    echo "Preparing environment file..."
 
                     SRC=$HOME
                     [ -d /home/deploy ] && SRC=/home/deploy
 
-                    echo "Nguồn env: $SRC"
+                    if [ ! -f "$SRC/.env" ]; then
+                        echo "❌ .env not found at $SRC"
+                        exit 1
+                    fi
 
-                    cp "$SRC/local.env" Back-End/local.env
                     cp "$SRC/.env" .env
+
+                    echo "✅ ENV ready"
                 '''
             }
         }
@@ -37,8 +41,13 @@ pipeline {
         stage('Deploy (Docker Compose)') {
             steps {
                 sh '''
-                    docker compose pull || true
+                    echo "Stopping old containers..."
+                    docker compose down || true
+
+                    echo "Building & starting services..."
                     docker compose up -d --build
+
+                    docker compose ps
                 '''
             }
         }

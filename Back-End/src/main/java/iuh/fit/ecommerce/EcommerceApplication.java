@@ -18,21 +18,33 @@ import java.util.TimeZone;
 public class EcommerceApplication {
 
 	public static void main(String[] args) {
+
 		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+
+		if (isLocalEnvironment()) {
+			loadDotenv();
+		}
+
+		SpringApplication.run(EcommerceApplication.class, args);
+	}
+
+	private static boolean isLocalEnvironment() {
+		return System.getenv("DOCKER_ENV") == null;
+	}
+
+	private static void loadDotenv() {
 		Path dotenvPath = Paths.get("local.env");
+
 		if (Files.exists(dotenvPath)) {
 			Dotenv dotenv = Dotenv.configure()
 					.filename("local.env")
+					.ignoreIfMalformed()
+					.ignoreIfMissing()
 					.load();
 
 			dotenv.entries().forEach(entry ->
 					System.setProperty(entry.getKey(), entry.getValue())
 			);
 		}
-        
-
-
-		SpringApplication.run(EcommerceApplication.class, args);
 	}
-
 }

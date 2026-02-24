@@ -4,30 +4,29 @@ services:
     container_name: ecomstore-mysql
     restart: always
     env_file:
-      - ./Back-End/local.env
+      - .env
     environment:
-      MYSQL_DATABASE: ecommerceWWW
-      MYSQL_USER: ${SPRING_DATASOURCE_USERNAME}
-      MYSQL_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - ecomstore-network
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$MYSQL_USER -p$MYSQL_PASSWORD || exit 1"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_USER} -p${MYSQL_PASSWORD} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 40s
-    networks:
-      - ecomstore-network
-
   backend:
     container_name: ecomstore-backend
     build:
       context: ./Back-End
       dockerfile: Dockerfile
     env_file:
-      - ./Back-End/local.env
+      - .env
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
@@ -37,10 +36,10 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      qdrant:
-        condition: service_started
       redis:
         condition: service_healthy
+      qdrant:
+        condition: service_started
     restart: always
     volumes:
       - ecomstore_uploads:/app/uploads
@@ -54,8 +53,8 @@ services:
       context: ./Front-End
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.mirindaq-dev.shop/api/v1}
-        VITE_WS_BASE_URL: ${VITE_WS_BASE_URL:-https://api.mirindaq-dev.shop/ws}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_WS_BASE_URL: ${VITE_WS_BASE_URL}
     ports:
       - "127.0.0.1:5173:80"
     depends_on:
@@ -64,32 +63,26 @@ services:
     networks:
       - ecomstore-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/", "||", "exit", "1"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
     container_name: ecomstore-elasticsearch
     restart: always
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-    networks: 
+    networks:
       - ecomstore-network
-    deploy:
-      resources:
-        limits:
-          memory: 1g
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
-      timeout: 10s
       retries: 5
       start_period: 60s
 
@@ -105,8 +98,10 @@ services:
   minio:
     image: minio/minio:latest
     container_name: ecomstore-minio
-    restart: always
     command: server /data --console-address ":9001"
+    restart: always
+    env_file:
+      - .env
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
@@ -120,17 +115,15 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
-      timeout: 10s
       retries: 3
-      start_period: 10s
 
   redis:
     image: redis:latest
     container_name: ecomstore-redis
     restart: always
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - redis_data:/data
     networks:
@@ -138,27 +131,17 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
-      timeout: 3s
       retries: 5
-      start_period: 10s
 
 networks:
   ecomstore-network:
     driver: bridge
-    name: ecomstore-network
 
 volumes:
   mysql_data:
-    name: ecomstore-mysql-data
   elasticsearch_data:
-    name: ecomstore-elasticsearch-data
   qdrant_data:
-    name: ecomstore-qdrant-data
   minio_data:
-    name: ecomstore-minio-data
   redis_data:
-    name: ecomstore-redis-data
   ecomstore_uploads:
-    name: ecomstore-uploads
   ecomstore_logs:
-    name: ecomstore-logs
