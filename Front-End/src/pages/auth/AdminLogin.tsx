@@ -38,11 +38,7 @@ export default function AdminLogin() {
   const adminLoginMutation = useMutation<AuthResponse>(authService.adminLogin, {
     onSuccess: async (data) => {
       try {
-        // 1. Lưu tokens trước
-        AuthStorageUtil.setTokens({
-          accessToken: data.data.accessToken,
-          refreshToken: data.data.refreshToken
-        });
+        AuthStorageUtil.setAccessToken(data.data.accessToken);
 
         // 2. Gọi API getProfile để lấy thông tin user đầy đủ
         const profileResponse = await authService.getProfile();

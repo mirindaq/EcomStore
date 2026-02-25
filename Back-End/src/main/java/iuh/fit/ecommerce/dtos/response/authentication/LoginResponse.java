@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 public class LoginResponse {
     private String accessToken;
-    private String refreshToken;
     private String email;
     private String fullName;
     private List<String> roles;

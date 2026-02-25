@@ -50,11 +50,10 @@ export default function UserLogin() {
       if (event.data.type === "GOOGLE_AUTH_SUCCESS") {
         const { data } = event.data;
         if (data) {
-          const { accessToken, refreshToken } = data;
+          const { accessToken } = data;
 
           try {
-            // 1. Lưu tokens trước
-            AuthStorageUtil.setTokens({ accessToken, refreshToken });
+            AuthStorageUtil.setAccessToken(accessToken);
 
             // 2. Gọi API getProfile để lấy thông tin user đầy đủ
             const profileResponse = await authService.getProfile();
@@ -95,11 +94,7 @@ export default function UserLogin() {
   const loginMutation = useMutation<AuthResponse>(authService.login, {
     onSuccess: async (data) => {
       try {
-        // 1. Lưu tokens trước
-        AuthStorageUtil.setTokens({
-          accessToken: data.data.accessToken,
-          refreshToken: data.data.refreshToken,
-        });
+        AuthStorageUtil.setAccessToken(data.data.accessToken);
 
         // 2. Gọi API getProfile để lấy thông tin user đầy đủ
         const profileResponse = await authService.getProfile();

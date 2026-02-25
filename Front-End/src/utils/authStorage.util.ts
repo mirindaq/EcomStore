@@ -1,22 +1,18 @@
 /**
- * Utility để quản lý việc lưu trữ authentication data
- * Kết hợp localStorage (access token, user data) và cookies (refresh token)
+ * Utility để quản lý việc lưu trữ authentication data.
+ * Access token = localStorage + Authorization header.
+ * Refresh token = httpOnly cookie (chỉ dùng ở endpoint refresh, do server set/clear).
  */
 
 import LocalStorageUtil from './localStorage.util';
-import CookieUtil from './cookie.util';
 import type { UserProfile } from '@/types/auth.type';
 
 export interface TokenData {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string; // không lưu phía client; chỉ qua httpOnly cookie
 }
 
 class AuthStorageUtil {
-  // Cookie configuration
-  private static readonly REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
-  private static readonly REFRESH_TOKEN_EXPIRES_DAYS = 7; // 7 ngày
-
   /**
    * Lưu access token vào localStorage
    */
@@ -29,31 +25,6 @@ class AuthStorageUtil {
    */
   static getAccessToken(): string | null {
     return LocalStorageUtil.getAccessToken();
-  }
-
-  /**
-   * Lưu refresh token vào cookie
-   */
-  static setRefreshToken(refreshToken: string): void {
-    CookieUtil.setCookie(
-      this.REFRESH_TOKEN_COOKIE_NAME,
-      refreshToken,
-      this.REFRESH_TOKEN_EXPIRES_DAYS
-    );
-  }
-
-  /**
-   * Lấy refresh token từ cookie
-   */
-  static getRefreshToken(): string | null {
-    return CookieUtil.getCookie(this.REFRESH_TOKEN_COOKIE_NAME);
-  }
-
-  /**
-   * Xóa refresh token khỏi cookie
-   */
-  static removeRefreshToken(): void {
-    CookieUtil.deleteCookie(this.REFRESH_TOKEN_COOKIE_NAME);
   }
 
   /**
@@ -71,56 +42,48 @@ class AuthStorageUtil {
   }
 
   /**
-   * Lưu cả tokens và user data
+   * Lưu access token và user data (refresh token do server set qua httpOnly cookie)
    */
   static setTokensAndData(tokens: TokenData, userData: UserProfile): void {
     this.setAccessToken(tokens.accessToken);
-    this.setRefreshToken(tokens.refreshToken);
     this.setUserData(userData);
   }
 
   /**
-   * Lưu cả access token và refresh token
+   * Lưu access token (refresh token chỉ ở httpOnly cookie, không lưu client)
    */
   static setTokens(tokens: TokenData): void {
     this.setAccessToken(tokens.accessToken);
-    this.setRefreshToken(tokens.refreshToken);
   }
 
   /**
-   * Lấy cả access token và refresh token
+   * Lấy access token (refresh token không đọc được từ client vì httpOnly)
    */
   static getTokens(): TokenData | null {
     const accessToken = this.getAccessToken();
-    const refreshToken = this.getRefreshToken();
-
-    if (!accessToken || !refreshToken) {
-      return null;
-    }
-
-    return { accessToken, refreshToken };
+    if (!accessToken) return null;
+    return { accessToken };
   }
 
   /**
-   * Cập nhật tokens mới (xóa cũ và lưu mới)
+   * Cập nhật access token (sau khi refresh)
    */
-  static updateTokens(tokens: TokenData): void {
-    this.setTokens(tokens);
+  static updateTokens(tokens: Pick<TokenData, 'accessToken'>): void {
+    this.setAccessToken(tokens.accessToken);
   }
 
   /**
-   * Xóa tất cả dữ liệu authentication
+   * Xóa tất cả dữ liệu authentication (cookie refresh do server clear khi logout/refresh fail)
    */
   static clearAll(): void {
     LocalStorageUtil.clearAll();
-    this.removeRefreshToken();
   }
 
   /**
-   * Kiểm tra có tokens không
+   * Kiểm tra có access token không (refresh nằm trong httpOnly cookie)
    */
   static hasTokens(): boolean {
-    return this.getAccessToken() !== null && this.getRefreshToken() !== null;
+    return this.getAccessToken() !== null;
   }
 
   /**
@@ -138,10 +101,10 @@ class AuthStorageUtil {
   }
 
   /**
-   * Kiểm tra user đã đăng nhập chưa (có đầy đủ token và data)
+   * Kiểm tra user đã đăng nhập chưa (có access token và user data)
    */
   static isAuthenticated(): boolean {
-    return this.hasTokens() && this.hasUserData();
+    return this.hasAccessToken() && this.hasUserData();
   }
 
   /**

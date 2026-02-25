@@ -9,6 +9,7 @@ import io.jsonwebtoken.JwtException;
 import iuh.fit.ecommerce.configurations.jwt.JwtUtil;
 import iuh.fit.ecommerce.dtos.request.authentication.LoginRequest;
 import iuh.fit.ecommerce.dtos.request.authentication.RegisterRequest;
+import iuh.fit.ecommerce.dtos.response.authentication.AuthLoginResult;
 import iuh.fit.ecommerce.dtos.response.authentication.LoginResponse;
 import iuh.fit.ecommerce.dtos.response.authentication.RefreshTokenResponse;
 import iuh.fit.ecommerce.dtos.response.user.UserProfileResponse;
@@ -76,7 +77,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserMapper userMapper;
 
     @Override
-    public LoginResponse staffLogin(LoginRequest loginRequest) {
+    public AuthLoginResult staffLogin(LoginRequest loginRequest) {
         return loginProcess(
                 loginRequest,
                 staffRepository::findByEmail,
@@ -85,7 +86,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public LoginResponse userLogin(LoginRequest loginRequest) {
+    public AuthLoginResult userLogin(LoginRequest loginRequest) {
         return loginProcess(
                 loginRequest,
                 customerRepository::findByEmail,
@@ -173,10 +174,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return RefreshTokenResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .email(email)
                 .build();
-
     }
 
     @Override
@@ -245,7 +244,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public LoginResponse socialLoginCallback(String loginType, String code, String redirectUri) throws IOException {
+    public AuthLoginResult socialLoginCallback(String loginType, String code, String redirectUri) throws IOException {
         String accessToken;
         if ("google".equalsIgnoreCase(loginType)) {
             // Use redirect_uri from request if provided (for mobile), otherwise use from config (for web)
@@ -299,7 +298,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
 
-    private <T extends User> LoginResponse loginProcess(
+    private <T extends User> AuthLoginResult loginProcess(
             LoginRequest loginRequest,
             Function<String, Optional<T>> findByEmail,
             Function<T, T> saveUser) {
@@ -335,15 +334,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .map(userRole -> userRole.getRole().getName().toUpperCase())
                 .toList();
 
-        return LoginResponse.builder()
+        LoginResponse body = LoginResponse.builder()
                 .accessToken(token)
-                .refreshToken(refreshTokenStr)
                 .roles(roles)
                 .email(user.getEmail())
                 .build();
+        return new AuthLoginResult(body, refreshTokenStr);
     }
 
-    private LoginResponse loginSocial(Customer customer) {
+    private AuthLoginResult loginSocial(Customer customer) {
         String accessToken = jwtUtil.generateAccessToken(customer);
         String refreshTokenStr = jwtUtil.generateRefreshToken(customer);
         LocalDate expiryDate = jwtUtil.getExpirationDateFromToken(refreshTokenStr, TokenType.REFRESH_TOKEN);
@@ -363,13 +362,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .map(r -> r.getRole().getName().toUpperCase())
                 .toList();
 
-        return LoginResponse.builder()
+        LoginResponse body = LoginResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshTokenStr)
                 .roles(roles)
                 .fullName(customer.getFullName())
                 .email(customer.getEmail())
                 .build();
+        return new AuthLoginResult(body, refreshTokenStr);
     }
 
     private void addRoleCustomer(Customer customer) {

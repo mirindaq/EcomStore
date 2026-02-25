@@ -2,18 +2,23 @@ package iuh.fit.ecommerce.controllers;
 
 import iuh.fit.ecommerce.dtos.request.authentication.LoginRequest;
 import iuh.fit.ecommerce.dtos.request.authentication.RegisterRequest;
+import iuh.fit.ecommerce.dtos.response.authentication.AuthLoginResult;
 import iuh.fit.ecommerce.dtos.response.authentication.LoginResponse;
 import iuh.fit.ecommerce.dtos.response.authentication.RefreshTokenResponse;
 import iuh.fit.ecommerce.dtos.response.base.ResponseSuccess;
 import iuh.fit.ecommerce.dtos.response.user.UserProfileResponse;
 import iuh.fit.ecommerce.services.AuthenticationService;
+import iuh.fit.ecommerce.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
 
 import java.io.IOException;
 
@@ -25,20 +30,20 @@ public class AuthenticationController {
 
     @PostMapping("/admin/login")
     public ResponseEntity<ResponseSuccess<LoginResponse>> loginStaff(@Valid @RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(new ResponseSuccess<>(
-                HttpStatus.OK,
-                "Login Success",
-                authenticationService.staffLogin(loginRequest)
-        ));
+        AuthLoginResult result = authenticationService.staffLogin(loginRequest);
+        ResponseCookie cookie = CookieUtil.buildRefreshTokenCookie(result.getRefreshTokenForCookie());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new ResponseSuccess<>(HttpStatus.OK, "Login Success", result.getLoginResponse()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ResponseSuccess<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(new ResponseSuccess<>(
-                HttpStatus.OK,
-                "Login Success",
-                authenticationService.userLogin(loginRequest)
-        ));
+        AuthLoginResult result = authenticationService.userLogin(loginRequest);
+        ResponseCookie cookie = CookieUtil.buildRefreshTokenCookie(result.getRefreshTokenForCookie());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new ResponseSuccess<>(HttpStatus.OK, "Login Success", result.getLoginResponse()));
     }
 
     @PostMapping("/register")
@@ -53,21 +58,18 @@ public class AuthenticationController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<ResponseSuccess<RefreshTokenResponse>> refresh(HttpServletRequest request) {
-        return ResponseEntity.ok(new ResponseSuccess<>(
-                HttpStatus.OK,
-                "Login Success",
-                authenticationService.refreshToken(request)
-        ));
+        RefreshTokenResponse body = authenticationService.refreshToken(request);
+        return ResponseEntity.ok(new ResponseSuccess<>(HttpStatus.OK, "Token refreshed", body));
     }
 
     @PostMapping("/logout")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResponseSuccess<?>> logout(HttpServletRequest request) {
         authenticationService.logout(request);
-        return ResponseEntity.ok(new ResponseSuccess<>(
-                HttpStatus.OK,
-                "Logout Success",
-                null));
+        ResponseCookie clearCookie = CookieUtil.clearRefreshTokenCookie();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .body(new ResponseSuccess<>(HttpStatus.OK, "Logout Success", null));
     }
 
     @GetMapping("/social-login")
@@ -88,12 +90,11 @@ public class AuthenticationController {
             @RequestParam String code,
             @RequestParam(value = "redirect_uri", required = false) String redirectUri) throws IOException {
 
-        return ResponseEntity.ok().body(
-                new ResponseSuccess<>(HttpStatus.OK,
-                        "Social login callback successfully",
-                        authenticationService.socialLoginCallback(loginType, code, redirectUri)
-                )
-        );
+        AuthLoginResult result = authenticationService.socialLoginCallback(loginType, code, redirectUri);
+        ResponseCookie cookie = CookieUtil.buildRefreshTokenCookie(result.getRefreshTokenForCookie());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new ResponseSuccess<>(HttpStatus.OK, "Social login callback successfully", result.getLoginResponse()));
     }
 
     @GetMapping("/profile")

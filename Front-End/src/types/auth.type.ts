@@ -17,7 +17,6 @@ export type RegisterRequest = {
 
 export type LoginResponse = {
   accessToken: string;
-  refreshToken: string;
   email: string;
   fullName: string;
   roles: string[];
@@ -31,14 +30,13 @@ export type UserProfile = {
   avatar?: string;
   phone?: string;
   rank?: Rank;
-  leader?: boolean; // For staff: indicates if they are a leader
+  leader?: boolean; 
 };
 
 export type ProfileResponse = ResponseApi<UserProfile>;
 
 export type RefreshTokenResponse = {
   accessToken: string;
-  refreshToken: string;
   email: string;
 };
 

@@ -48,7 +48,7 @@ export default function UserRegister() {
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         const { data } = event.data
         if (data) {
-          const { accessToken, refreshToken, email, roles, fullName } = data
+          const { accessToken, email, roles, fullName } = data
 
           const userProfile: UserProfile = {
             id: email,
@@ -57,8 +57,7 @@ export default function UserRegister() {
             roles: roles,
           }
 
-          // Lưu token và data cùng lúc
-          AuthStorageUtil.setTokensAndData({ accessToken, refreshToken }, userProfile)
+          AuthStorageUtil.setTokensAndData({ accessToken }, userProfile)
 
           // Sử dụng UserContext để login
           login(userProfile)

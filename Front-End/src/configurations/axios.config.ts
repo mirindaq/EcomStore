@@ -9,11 +9,12 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 10000,
-  // withCredentials: false, 
+  // withCredentials
 });
 
 axiosClient.interceptors.request.use(
   (config) => {
+    if ((config as any)._skipAuthInterceptor) return config;
     const token = AuthStorageUtil.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -24,6 +25,7 @@ axiosClient.interceptors.request.use(
 );
 
 let isRefreshing = false;
+let isClearingAuth = false;
 let failedQueue: Array<{
   resolve: (value?: any) => void;
   reject: (error?: any) => void;
@@ -41,6 +43,15 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+/** Xóa auth và redirect về trang login (chỉ chạy 1 lần, tránh loop) */
+const clearAuthAndRedirect = () => {
+  if (isClearingAuth) return;
+  isClearingAuth = true;
+  const loginPath = AuthStorageUtil.getLoginPath();
+  AuthStorageUtil.clearAll();
+  window.location.href = loginPath;
+};
+
 axiosClient.interceptors.response.use(
   (response) => {
     return response;
@@ -53,6 +64,12 @@ axiosClient.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (originalRequest._isRefreshRequest) {
+        processQueue(error, null);
+        clearAuthAndRedirect();
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -69,9 +86,10 @@ axiosClient.interceptors.response.use(
 
       try {
         const response = await authService.refreshToken();
-        const { accessToken, refreshToken: newRefreshToken } = (response.data as any).data;
+        const { accessToken } = (response.data as any).data;
+        if (!accessToken) throw new Error('No access token in refresh response');
 
-        AuthStorageUtil.setTokens({ accessToken, refreshToken: newRefreshToken });
+        AuthStorageUtil.setAccessToken(accessToken);
 
         processQueue(null, accessToken);
 
@@ -79,34 +97,13 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-
-        const loginPath = AuthStorageUtil.getLoginPath();
-
-        AuthStorageUtil.clearAll();
-
-        try {
-          await authService.logout();
-        } catch (logoutError) {
-          console.log('Logout failed, but continuing with redirect:', logoutError);
-        }
-
-        window.location.href = loginPath;
+        clearAuthAndRedirect();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     } else if (error.response?.status === 401) {
-      const loginPath = AuthStorageUtil.getLoginPath();
-
-      AuthStorageUtil.clearAll();
-
-      try {
-        await authService.logout();
-      } catch (logoutError) {
-        console.log('Logout failed, but continuing with redirect:', logoutError);
-      }
-
-      window.location.href = loginPath;
+      if (!isClearingAuth) clearAuthAndRedirect();
       return Promise.reject(error);
     }
 

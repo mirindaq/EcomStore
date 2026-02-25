@@ -26,10 +26,10 @@ export const authService = {
 
   refreshToken: async () => {
     const response = await axiosClient.post<RefreshTokenApiResponse>('/auth/refresh-token', {}, {
-      withCredentials: true, // Gửi cookie (refresh token) kèm theo request
-      // @ts-ignore - Custom property để bỏ qua interceptor
-      _skipAuthInterceptor: true // Bỏ qua interceptor để tránh vòng lặp
-    });
+      withCredentials: true, 
+      _skipAuthInterceptor: true,
+      _isRefreshRequest: true, // Để interceptor biết khi refresh 401 → refresh fail, clear + redirect
+    } as any);
     return response;
   },
   
@@ -50,7 +50,7 @@ export const authService = {
 
   logout: async () => {
     const response = await axiosClient.post('/auth/logout', {}, {
-      withCredentials: true, // Gửi cookie (refresh token) kèm theo request
+      withCredentials: true, 
     });
     return response;
   }
