@@ -159,6 +159,11 @@ management:
 logging:
   file:
     name: ${LOGGING_FILE_NAME:/app/logs/application.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 7
+      total-size-cap: 500MB
   level:
     root: INFO
     iuh.fit.ecommerce: INFO
