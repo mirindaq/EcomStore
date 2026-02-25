@@ -82,7 +82,7 @@ spring:
         embedding:
           text:
             options:
-              model: text-embedding-004
+              model: gemini-embedding-001
           api-key: ${GEMINI_KEY}
     vectorstore:
       qdrant:
