@@ -273,7 +273,7 @@ public class ChatServiceImpl implements ChatService {
 
         Optional<Message> lastMessageOptional = messageRepository.findTopByChat_IdOrderByCreatedAtDesc(chatId);
         if (lastMessageOptional.isEmpty()) {
-            throw new ResourceNotFoundException(ErrorCode.CHAT_NO_MESSAGES);
+            return;
         }
 
         Message lastMessage = lastMessageOptional.get();
