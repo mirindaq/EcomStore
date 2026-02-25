@@ -156,6 +156,69 @@ services:
       retries: 5
       start_period: 20s
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ecomstore-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    depends_on:
+      - backend
+    networks:
+      - ecomstore-network
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: ecomstore-loki
+    restart: always
+    ports:
+      - "3100:3100"
+    command: ["-config.file=/etc/loki/config.yml"]
+    volumes:
+      - ./observability/loki/config.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+    networks:
+      - ecomstore-network
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: ecomstore-promtail
+    restart: always
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./observability/promtail/config.yml:/etc/promtail/config.yml:ro
+      - ecomstore_logs:/app/logs:ro
+    depends_on:
+      - loki
+    networks:
+      - ecomstore-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ecomstore-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - ecomstore-network
+
 networks:
   ecomstore-network:
     driver: bridge
@@ -169,3 +232,6 @@ volumes:
   redis_data:
   ecomstore_uploads:
   ecomstore_logs:
+  prometheus_data:
+  grafana_data:
+  loki_data:
