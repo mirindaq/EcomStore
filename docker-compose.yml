@@ -185,6 +185,21 @@ services:
       - "--web.enable-lifecycle"
     depends_on:
       - backend
+      - node-exporter
+    networks:
+      - ecomstore-network
+    logging: *default-docker-logging
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: ecomstore-node-exporter
+    restart: always
+    ports:
+      - "9100:9100"
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - /:/host:ro,rslave
     networks:
       - ecomstore-network
     logging: *default-docker-logging
