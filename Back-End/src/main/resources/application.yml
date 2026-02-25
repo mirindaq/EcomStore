@@ -159,6 +159,15 @@ management:
 logging:
   file:
     name: ${LOGGING_FILE_NAME:/app/logs/application.log}
+  level:
+    root: INFO
+    iuh.fit.ecommerce: INFO
+    org.springframework: WARN
+    org.springframework.web.socket.config.WebSocketMessageBrokerStats: ERROR
+    org.springframework.web.servlet.DispatcherServlet: WARN
+    org.apache.catalina: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
