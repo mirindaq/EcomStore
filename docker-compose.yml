@@ -80,7 +80,7 @@ services:
     logging: *default-docker-logging
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
     container_name: ecomstore-elasticsearch
     restart: always
     environment:
