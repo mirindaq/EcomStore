@@ -136,7 +136,7 @@ public enum ErrorCode {
     // User errors (4570-4579)
     USER_NOT_FOUND(4570, HttpStatus.NOT_FOUND, "User not found. The specified user ID does not exist in the system."),
     USER_NOT_FOUND_BY_EMAIL(4571, HttpStatus.NOT_FOUND, "User not found. The specified email does not exist in the system."),
-    REFRESH_TOKEN_NOT_FOUND(4572, HttpStatus.NOT_FOUND, "Refresh token not found. The specified refresh token does not exist in the system."),
+    REFRESH_TOKEN_NOT_FOUND(4572, HttpStatus.NOT_FOUND, "Refresh token not found"),
 
     // Supplier errors (4580-4589)
     SUPPLIER_NOT_FOUND(4580, HttpStatus.NOT_FOUND, "Supplier not found. The specified supplier ID does not exist in the system."),
@@ -160,11 +160,11 @@ public enum ErrorCode {
     PASSWORD_MISMATCH(2004, HttpStatus.BAD_REQUEST, "Password and confirm password do not match. Please ensure both passwords are identical."),
     EMAIL_ALREADY_REGISTERED(2005, HttpStatus.CONFLICT, "Email already registered. This email address is already associated with an account."),
     PHONE_ALREADY_REGISTERED(2006, HttpStatus.CONFLICT, "Phone already registered. This phone number is already associated with an account."),
-    REFRESH_TOKEN_NOT_FOUND_IN_COOKIES(2007, HttpStatus.UNAUTHORIZED, "Refresh token not found in cookies. Please login again."),
-    REFRESH_TOKEN_INVALID(2008, HttpStatus.UNAUTHORIZED, "Invalid or expired refresh token. Please login again to obtain a new token."),
-    REFRESH_TOKEN_NOT_BELONGS_TO_USER(2009, HttpStatus.UNAUTHORIZED, "Refresh token does not belong to user. Please login again."),
-    REFRESH_TOKEN_REVOKED(2010, HttpStatus.UNAUTHORIZED, "Refresh token has been revoked. Please login again."),
-    REFRESH_TOKEN_EXPIRED(2011, HttpStatus.UNAUTHORIZED, "Refresh token has expired. Please login again to obtain a new token."),
+    REFRESH_TOKEN_NOT_FOUND_IN_COOKIES(2007, HttpStatus.UNAUTHORIZED, "Missing refresh token"),
+    REFRESH_TOKEN_INVALID(2008, HttpStatus.UNAUTHORIZED, "Invalid refresh token"),
+    REFRESH_TOKEN_NOT_BELONGS_TO_USER(2009, HttpStatus.UNAUTHORIZED, "Invalid refresh token"),
+    REFRESH_TOKEN_REVOKED(2010, HttpStatus.UNAUTHORIZED, "Refresh token revoked"),
+    REFRESH_TOKEN_EXPIRED(2011, HttpStatus.UNAUTHORIZED, "Refresh token expired"),
     USER_DISABLED(2012, HttpStatus.UNAUTHORIZED, "User is disabled. Your account has been deactivated. Please contact support."),
     TOKEN_NOT_BELONGS_TO_USER(2013, HttpStatus.FORBIDDEN, "Token does not belong to current user. Please login again."),
     INVALID_PASSWORD(2014, HttpStatus.UNAUTHORIZED, "Invalid password. Please check your password and try again."),

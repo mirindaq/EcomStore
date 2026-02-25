@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import javax.naming.AuthenticationException;
 import java.nio.file.AccessDeniedException;
@@ -65,7 +66,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(NOT_FOUND)
     public ResponseError handleDataNotFoundException(ResourceNotFoundException e, WebRequest request) {
-        log.warn("Resource not found at {}: {}", request.getDescription(false), e.getMessage());
+        if (e.getErrorCode() == ErrorCode.REFRESH_TOKEN_NOT_FOUND) {
+            log.warn("Auth failed: {}", e.getMessage());
+        } else {
+            log.warn("Resource not found at {}: {}", request.getDescription(false), e.getMessage());
+        }
         ErrorCode errorCode = e.getErrorCode();
         return ResponseError.builder()
                 .timestamp(new Date())
@@ -164,7 +169,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseError handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
-        log.warn("Unauthorized error at {}: {}", request.getDescription(false), ex.getMessage());
+        log.warn("Auth failed: {}", ex.getMessage());
         ErrorCode errorCode = ex.getErrorCode();
         return ResponseError.builder()
                 .timestamp(new Date())
@@ -175,31 +180,31 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseError handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+        log.warn("Auth failed: {}", ex.getMessage());
+        return ResponseError.builder()
+                .timestamp(new Date())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .message(ex.getMessage())
+                .build();
+    }
+
     @ExceptionHandler(JwtException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseError handleJwtException(JwtException ex, WebRequest request) {
-        log.warn("JWT error at {}: {}", request.getDescription(false), ex.getMessage());
-        ErrorCode errorCode = ErrorCode.TOKEN_INVALID;
+        log.warn("Auth failed: {}", ex.getMessage());
         return ResponseError.builder()
                 .timestamp(new Date())
-                .status(errorCode.getHttpStatus().value())
-                .error(errorCode.getHttpStatus().getReasonPhrase())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
                 .path(request.getDescription(false).replace("uri=", ""))
-                .message(errorCode.getMessage())
+                .message(ex.getMessage())
                 .build();
     }
-//
-//    @ExceptionHandler(AccessDeniedException.class)
-//    @ResponseStatus(HttpStatus.FORBIDDEN)
-//    public ResponseError handleJwtException(AccessDeniedException ex, WebRequest request) {
-//        return ResponseError.builder()
-//                .timestamp(new Date())
-//                .status(HttpStatus.FORBIDDEN.value())
-//                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
-//                .path(request.getDescription(false).replace("uri=", ""))
-//                .message(ex.getMessage())
-//                .build();
-//    }
 
 
 
